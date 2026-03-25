@@ -17,7 +17,8 @@ source "$BASE_DIR/config/experiment.conf"
 
 TS="$(date +%Y%m%d_%H%M%S)"
 EXP_ID="${TS}_${PROTOCOL}_${CC}_${DIRECTION}_${RUN_ID}"
-OUT_DIR="${LOG_ROOT}/${EXP_ID}"
+OUT_DIR="${BASE_DIR}/${LOG_ROOT}/${EXP_ID}"
+TMP_ROOT="${BASE_DIR}/tmp"
 
 mkdir -p "$OUT_DIR"
 mkdir -p "$TMP_ROOT"

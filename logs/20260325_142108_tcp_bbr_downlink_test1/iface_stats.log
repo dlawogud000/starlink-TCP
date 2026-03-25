@@ -1,0 +1,36 @@
+1774416068.943297219
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    413541613  750286   0       19162   0       240127  
+    TX: bytes  packets  errors  dropped carrier collsns 
+    404038918  373370   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 403981300 bytes 373370 pkt (dropped 0, overlimits 0 requeues 2) 
+ backlog 0b 0p requeues 2
+  flows 1486 (inactive 1482 throttled 0)
+  gc 0 highprio 8 throttled 3723 latency 32.144us
+1774416069.953347021
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    413548869  750341   0       19165   0       240157  
+    TX: bytes  packets  errors  dropped carrier collsns 
+    404039310  373374   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 403981692 bytes 373374 pkt (dropped 0, overlimits 0 requeues 2) 
+ backlog 0b 0p requeues 2
+  flows 1486 (inactive 1482 throttled 0)
+  gc 0 highprio 8 throttled 3723 latency 32.144us
+1774416070.960215781
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    413556959  750398   0       19168   0       240182  
+    TX: bytes  packets  errors  dropped carrier collsns 
+    404039800  373379   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 403982182 bytes 373379 pkt (dropped 0, overlimits 0 requeues 2) 
+ backlog 0b 0p requeues 2
+  flows 1486 (inactive 1482 throttled 0)
+  gc 0 highprio 8 throttled 3723 latency 32.144us

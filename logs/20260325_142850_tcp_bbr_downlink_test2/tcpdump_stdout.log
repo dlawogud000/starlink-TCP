@@ -1,0 +1,4 @@
+tcpdump: listening on enp2s0, link-type EN10MB (Ethernet), capture size 128 bytes
+371927 packets captured
+371930 packets received by filter
+0 packets dropped by kernel
