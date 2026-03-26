@@ -1,0 +1,396 @@
+1774497212.027025991
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    185762480  208911   0       3375    0       37756   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    61657278   105955   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 61652706 bytes 105955 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 322 (inactive 318 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497213.035914679
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    185767049  208948   0       3378    0       37767   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    61658286   105966   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 61653696 bytes 105966 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 322 (inactive 319 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497214.049838487
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    185773465  208992   0       3381    0       37792   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    61659266   105976   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 61654676 bytes 105976 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 322 (inactive 318 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497215.060046302
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    186776006  209860   0       3384    0       37976   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    61684347   106348   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 61680747 bytes 106363 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497216.065432061
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    199117812  219257   0       3384    0       39251   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    61990625   110907   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 61987223 bytes 110925 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497217.072049306
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    211476226  228701   0       3384    0       40558   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    62276451   115198   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 62272917 bytes 115214 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497218.078063693
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    223824803  238096   0       3384    0       41829   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    62560409   119467   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 62556941 bytes 119482 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497219.083250863
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    236163398  247521   0       3384    0       43138   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    62845615   123751   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 62842327 bytes 123771 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497220.090095662
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    248525480  256920   0       3384    0       44407   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    63132549   128064   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 63128931 bytes 128079 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497221.095443711
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    260867001  266337   0       3384    0       45708   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    63417587   132345   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 63413903 bytes 132359 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497222.100658387
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    273207391  275739   0       3384    0       46986   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    63701401   136612   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 63697783 bytes 136627 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497223.106373678
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    285552961  285141   0       3384    0       48272   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    63987159   140901   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 63983475 bytes 140915 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497224.111702382
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    297894112  294543   0       3384    0       49553   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    64271685   145176   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 64268133 bytes 145192 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497225.117305925
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    310239725  303956   0       3384    0       50837   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    64555967   149450   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 64552529 bytes 149468 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497226.123512772
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    322591943  313371   0       3384    0       52123   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    64841087   153734   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 64837417 bytes 153748 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 322 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497227.128609811
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    334932391  322765   0       3384    0       53396   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    65125005   158003   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 65121435 bytes 158019 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497228.134479534
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    347278423  332189   0       3384    0       54709   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    65408701   162271   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 65405263 bytes 162289 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 322 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497229.140840236
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    359631689  341584   0       3384    0       55982   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    65693213   166549   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 65689511 bytes 166563 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497230.145937509
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    371970424  351008   0       3384    0       57295   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    65977729   170823   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 65974027 bytes 170837 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497231.151012443
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    384308648  360426   0       3384    0       58601   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    66261803   175097   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 66258149 bytes 175112 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497232.156769017
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    396654336  369863   0       3384    0       59917   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    66547728   179397   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 66544140 bytes 179413 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 324 (inactive 323 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497233.162095261
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    408998673  379264   0       3384    0       61196   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    66835150   183687   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 66831496 bytes 183702 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 325 (inactive 324 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497234.168555767
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    421352221  388684   0       3384    0       62478   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    67125887   187999   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 67122365 bytes 188016 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 325 (inactive 324 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497235.174443228
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    433699908  398113   0       3384    0       63797   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    67410823   192273   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 67407663 bytes 192293 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 325 (inactive 324 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497236.180372093
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    446049064  407512   0       3384    0       65081   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    67695193   196550   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 67691605 bytes 196566 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 325 (inactive 324 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497237.185798964
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    458390991  416933   0       3384    0       66379   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    67982437   200865   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 67978699 bytes 200879 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 325 (inactive 324 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497238.191077500
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    470730869  426341   0       3384    0       67674   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    68266523   205140   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 68262785 bytes 205154 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 325 (inactive 324 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497239.196192484
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    483071229  435757   0       3384    0       68984   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    68550573   209411   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 68547033 bytes 209428 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 325 (inactive 324 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497240.201887896
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    495417475  445153   0       3384    0       70261   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    68835391   213700   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 68831719 bytes 213715 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 325 (inactive 324 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497241.207270580
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    507757703  454549   0       3384    0       71539   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    69119267   217964   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 69115595 bytes 217979 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 325 (inactive 324 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497242.213242631
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    520105896  463948   0       3384    0       72812   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    69403435   222236   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 69399895 bytes 222253 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 325 (inactive 324 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497243.218870132
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    532449988  473431   0       3384    0       74135   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    69724539   226583   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 69720915 bytes 226599 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 329 (inactive 328 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
+1774497244.224140659
+3: enp2s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq state UP mode DEFAULT group default qlen 1000
+    link/ether a8:42:a1:5e:28:7e brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    544789636  482848   0       3384    0       75444   
+    TX: bytes  packets  errors  dropped carrier collsns 
+    70016097   230871   0       0       0       0       
+qdisc fq 0: root refcnt 2 limit 10000p flow_limit 100p buckets 1024 orphan_mask 1023 quantum 3028b initial_quantum 15140b low_rate_threshold 550Kbit refill_delay 40.0ms 
+ Sent 70012407 bytes 230886 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+  flows 329 (inactive 328 throttled 0)
+  gc 0 highprio 8 throttled 74 latency 11.833us
