@@ -17,4 +17,4 @@ for name in ping tcpdump ss iface; do
 done
 
 sleep 1
-sudo pkill -f "tcpdump -i $UE_IFACE" 2>/dev/null || true
+sudo pkill -f "tcpdump -i $STARLINK_IFACE" 2>/dev/null || true

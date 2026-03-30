@@ -4,7 +4,9 @@ import matplotlib.pyplot as plt
 times = []
 rtts = []
 
-with open("ping.log") as f:
+path="logs/20260330_150437_tcp_bbr_downlink_eth1/"
+
+with open(path+"ping.log") as f:
     for line in f:
         match = re.search(r"\[(.*?)\].*time=(.*?) ms", line)
         if match:

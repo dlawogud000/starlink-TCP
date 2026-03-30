@@ -7,4 +7,4 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$BASE_DIR/config/experiment.conf"
 
-timeout ${DURATION}s ping "$SERVER_IP" -i "$PING_INTERVAL" -D > "$OUT_DIR/ping.log"
+timeout ${DURATION}s ping -I "$STARLINK_IFACE" "$SERVER_IP" -i "$PING_INTERVAL" -D > "$OUT_DIR/ping.log"

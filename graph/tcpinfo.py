@@ -5,7 +5,9 @@ times = []
 cwnds = []
 rtts = []
 
-with open("ss_tcpinfo.log") as f:
+path="logs/20260330_150437_tcp_bbr_downlink_eth1/"
+
+with open(path+"ss_tcpinfo.log") as f:
     for line in f:
         if line.startswith("1"):  # timestamp line
             current_time = float(line.strip())

@@ -1,7 +1,9 @@
 import json
 import matplotlib.pyplot as plt
 
-with open("iperf.json") as f:
+path="logs/20260330_150437_tcp_bbr_downlink_eth1/"
+
+with open(path+"iperf.json") as f:
     data = json.load(f)
 
 times = []
