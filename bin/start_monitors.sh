@@ -11,8 +11,8 @@ mkdir -p "$OUT_DIR"
 mkdir -p "$TMP_ROOT"
 
 # ping
-nohup bash "$BASE_DIR/bin/run_ping.sh" "$OUT_DIR" > "$OUT_DIR/ping_stdout.log" 2>&1 &
-echo $! > "$TMP_ROOT/ping.pid"
+#nohup bash "$BASE_DIR/bin/run_ping.sh" "$OUT_DIR" > "$OUT_DIR/ping_stdout.log" 2>&1 &
+#echo $! > "$TMP_ROOT/ping.pid"
 
 # tcpdump
 nohup sudo tcpdump -i "$STARLINK_IFACE" -s "$TCPDUMP_SNAPLEN" -w "$OUT_DIR/ue_tcpdump.pcap" host "$SERVER_IP" \
