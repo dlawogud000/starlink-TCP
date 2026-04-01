@@ -1,7 +1,7 @@
 import json
 import matplotlib.pyplot as plt
 
-path="logs/20260330_150437_tcp_bbr_downlink_eth1/"
+path="starlink-TCP/logs/20260401_144832_tcp_bbr_uplink_test6/"
 
 with open(path+"iperf.json") as f:
     data = json.load(f)
@@ -20,4 +20,5 @@ plt.xlabel("Time (s)")
 plt.ylabel("Throughput (Mbps)")
 plt.title("Throughput over Time")
 plt.grid()
+plt.savefig(path + "iperf3.png", dpi=150, bbox_inches="tight")
 plt.show()

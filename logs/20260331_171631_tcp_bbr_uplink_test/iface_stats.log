@@ -1,0 +1,372 @@
+1774944994.320058522
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     263101452  209830      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+      66781838   97455      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 67967788 bytes 97457 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774944995.323484156
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     263110130  209961      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+      67744678   98118      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 68954388 bytes 98120 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774944996.329669400
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     263505290  214436      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+      74955804  103062      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 76486670 bytes 103097 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774944997.343968609
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     264012646  220216      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+      83790990  109114      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 85595158 bytes 109117 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774944998.358114837
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     264559620  226360      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+      92844304  115314      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 95026062 bytes 115349 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774944999.370657082
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     265089546  232359      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     101265816  121082      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 103719714 bytes 121095 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945000.376406648
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     265434686  236334      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     107835326  125582      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 110543420 bytes 125604 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945001.390796323
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     265972514  242407      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     116246640  131343      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 119285586 bytes 131383 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945002.403414447
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     266331396  246447      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     122389076  135550      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 125609762 bytes 135563 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945003.408751643
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     266787034  251570      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     129762384  140589      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 133275342 bytes 140629 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945004.423805245
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     267257010  256799      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     137691798  146009      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 141437448 bytes 146022 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945005.437670763
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     267747866  262280      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     145521132  151370      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 149533004 bytes 151372 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945006.452034290
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     268240976  267856      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     153956790  157148      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 158326514 bytes 157183 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945007.464852799
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     268596800  271870      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     159715804  161091      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 164242542 bytes 161093 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945008.472992605
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     269133200  277901      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     167834980  166652      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 172657728 bytes 166654 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945009.487052367
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     269599630  283179      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     176225536  172398      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 181403430 bytes 172433 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945010.502277711
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     270148564  289357      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     185179916  178532      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 190686218 bytes 178569 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945011.515697560
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     270626906  294766      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     193367558  184141      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 199152894 bytes 184165 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945012.526305473
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     271106664  300248      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     201314770  189585      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 207416570 bytes 189627 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945013.539203394
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     271596656  305804      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     209518806  195205      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 215869430 bytes 195213 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945014.542724517
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     271992142  310354      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     216533614  200010      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 223130772 bytes 200012 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945015.547901368
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     272485930  315891      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     224233804  205285      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 231111330 bytes 205287 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945016.562257486
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     272918838  320819      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     231837762  210495      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 239061608 bytes 210542 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945017.576970701
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     273323560  325463      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     238591596  215121      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 246009552 bytes 215134 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945018.584650400
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     273915920  332218      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     248573226  221959      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 256395856 bytes 221998 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945019.599624400
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     274505176  339008      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     258575000  228811      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 266706526 bytes 228813 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945020.613891627
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     275103308  345937      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     268485608  235600      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 277030690 bytes 235635 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945021.626270014
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     275698118  352938      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     278595454  242526      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 287479068 bytes 242540 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945022.632592350
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     276275400  359600      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     288556812  249349      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 297816858 bytes 249371 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945023.639445042
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     276873144  366438      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     298262468  255996      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 307874624 bytes 256018 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
+1774945024.653664130
+4: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:  bytes packets errors dropped  missed   mcast           
+     277264340  370961      0       0       0       0 
+    TX:  bytes packets errors dropped carrier collsns           
+     304432940  260223      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 314239678 bytes 260225 pkt (dropped 0, overlimits 0 requeues 8) 
+ backlog 0b 0p requeues 8
+  maxpacket 173 drop_overlimit 0 new_flow_count 752 ecn_mark 0
+  new_flows_len 0 old_flows_len 0

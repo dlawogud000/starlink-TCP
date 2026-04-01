@@ -1,0 +1,4 @@
+awk: line 10: syntax error at or near ,
+awk: line 15: syntax error at or near if
+awk: line 19: syntax error at or near if
+awk: line 22: syntax error at or near print
