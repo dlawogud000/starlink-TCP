@@ -1,30 +1,40 @@
+#!/usr/bin/env python3
+import os
 import re
+import sys
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+if len(sys.argv) < 2:
+    print(f"Usage: {sys.argv[0]} <out_dir>", file=sys.stderr)
+    sys.exit(1)
+
+path = sys.argv[1]
+logfile = os.path.join(path, "ss_rtt.log")
+
+if not os.path.exists(logfile):
+    print(f"[WARN] Missing {logfile}", file=sys.stderr)
+    sys.exit(0)
 
 times = []
 rtts = []
 
-path = "starlink-TCP/logs/20260401_144832_tcp_bbr_uplink_test6/"
-logfile = path + "ss_rtt.log"
-
 with open(logfile) as f:
     for line in f:
         line = line.strip()
-
-        # no_connection 라인은 건너뜀
-        if not line or "no_connection" in line:
+        if not line or "no_connection" in line or "no_data_connection" in line:
             continue
 
-        # 예: 1711951234.123456789 rtt_ms=42.7 rttvar_ms=3.1 ...
-        match = re.search(r"^([0-9]+\.[0-9]+)\s+rtt_ms=([0-9.]+)", line)
-        if match:
-            times.append(float(match.group(1)))
-            rtts.append(float(match.group(2)))
+        m = re.search(r"^([0-9]+\.[0-9]+)\s+rtt_ms=([0-9.]+)", line)
+        if m:
+            times.append(float(m.group(1)))
+            rtts.append(float(m.group(2)))
 
 if not times:
-    raise ValueError("ss_rtt.log에서 RTT 데이터를 찾지 못했습니다.")
+    print("[WARN] No RTT data found in ss_rtt.log", file=sys.stderr)
+    sys.exit(0)
 
-# normalize time
 t0 = times[0]
 times = [t - t0 for t in times]
 
@@ -35,5 +45,5 @@ plt.ylabel("RTT (ms)")
 plt.title("RTT over Time")
 plt.grid()
 
-plt.savefig(path + "ss_rtt.png", dpi=150, bbox_inches="tight")
-plt.show()
+plt.savefig(os.path.join(path, "ss_rtt.png"), dpi=150, bbox_inches="tight")
+plt.close()

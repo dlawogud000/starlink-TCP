@@ -33,6 +33,24 @@ echo "[INFO] Experiment ID: $EXP_ID"
 cleanup() {
   "$BASE_DIR/bin/stop_monitors.sh" "$OUT_DIR" || true
 }
+
+plot_graphs() {
+  echo "[INFO] Generating plots..."
+
+  python3 "$BASE_DIR/graph/ping.py" "$OUT_DIR" \
+    > "$OUT_DIR/plot_ss_rtt.stdout.log" || true
+
+  if [ "$PROTOCOL" = "tcp" ] || [ "$PROTOCOL" = "udp" ]; then
+    python3 "$BASE_DIR/graph/iperf.py" "$OUT_DIR" \
+      > "$OUT_DIR/plot_iperf.stdout.log" || true
+  fi
+
+  if [ "$PROTOCOL" = "tcp" ]; then
+    python3 "$BASE_DIR/graph/tcpinfo.py" "$OUT_DIR" \
+      > "$OUT_DIR/plot_tcpinfo.stdout.log" || true
+  fi
+}
+
 trap cleanup EXIT
 
 if [ "$PROTOCOL" = "tcp" ] || [ "$PROTOCOL" = "udp" ]; then
@@ -43,5 +61,10 @@ else
   echo "[ERROR] Unknown protocol: $PROTOCOL"
   exit 1
 fi
+
+cleanup
+trap - EXIT
+
+plot_graphs
 
 echo "[INFO] Experiment completed: $EXP_ID"

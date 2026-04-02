@@ -10,10 +10,6 @@ source "$BASE_DIR/config/experiment.conf"
 mkdir -p "$OUT_DIR"
 mkdir -p "$TMP_ROOT"
 
-# ping
-nohup bash "$BASE_DIR/bin/run_ping.sh" "$OUT_DIR" > "$OUT_DIR/ping_stdout.log" 2>&1 &
-echo $! > "$TMP_ROOT/ping.pid"
-
 # tcpdump
 nohup sudo tcpdump -i "$STARLINK_IFACE" -s "$TCPDUMP_SNAPLEN" -w "$OUT_DIR/ue_tcpdump.pcap" host "$SERVER_IP" \
   > "$OUT_DIR/tcpdump_stdout.log" 2>&1 &
@@ -28,6 +24,10 @@ while true; do
 done
 " > "$OUT_DIR/ss_tcpinfo.log" 2>&1 &
 echo $! > "$TMP_ROOT/ss.pid"
+
+# ping
+nohup bash "$BASE_DIR/bin/run_ping.sh" "$OUT_DIR" > "$OUT_DIR/ping_stdout.log" 2>&1 &
+echo $! > "$TMP_ROOT/ping.pid"
 
 # interface stats
 nohup bash -c "

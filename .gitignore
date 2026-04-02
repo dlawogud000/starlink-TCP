@@ -56,3 +56,4 @@ dkms.conf
 
 #except packet capture for size limit
 logs/**/*.pcap
+bin/tmp/*.pid

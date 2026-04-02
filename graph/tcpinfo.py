@@ -1,12 +1,25 @@
+#!/usr/bin/env python3
+import os
 import re
+import sys
+import matplotlib
+matplotlib.use("Agg")
 import matplotlib.pyplot as plt
+
+if len(sys.argv) < 2:
+    print(f"Usage: {sys.argv[0]} <out_dir>", file=sys.stderr)
+    sys.exit(1)
+
+path = sys.argv[1]
+logfile = os.path.join(path, "ss_tcpinfo.log")
+
+if not os.path.exists(logfile):
+    print(f"[WARN] Missing {logfile}", file=sys.stderr)
+    sys.exit(0)
 
 times = []
 cwnds = []
 rtts = []
-
-path = "starlink-TCP/logs/20260401_144832_tcp_bbr_uplink_test6/"
-logfile = path + "ss_tcpinfo.log"
 
 current_time = None
 best_entry = None
@@ -30,33 +43,27 @@ def parse_metrics(line):
 
     return cwnd, rtt, bytes_sent
 
-
 def flush_best():
-    if best_entry:
+    if best_entry is not None:
         times.append(best_entry["time"])
         cwnds.append(best_entry["cwnd"])
         rtts.append(best_entry["rtt"])
-
 
 with open(logfile) as f:
     for line in f:
         line = line.strip()
 
-        # timestamp line
         if re.match(r"^\d+\.\d+$", line):
             flush_best()
             current_time = float(line)
             best_entry = None
             continue
 
-        # metric line (contains rtt, cwnd, bytes_sent)
         if "cwnd:" in line and "rtt:" in line:
             cwnd, rtt, bytes_sent = parse_metrics(line)
-
-            if cwnd is None or rtt is None:
+            if cwnd is None or rtt is None or current_time is None:
                 continue
 
-            # choose data connection (max bytes_sent)
             if best_entry is None or bytes_sent > best_entry["bytes_sent"]:
                 best_entry = {
                     "time": current_time,
@@ -65,24 +72,29 @@ with open(logfile) as f:
                     "bytes_sent": bytes_sent,
                 }
 
-# 마지막 남은 것도 flush
 flush_best()
 
 if not times:
-    raise ValueError("No valid data found")
+    print("[WARN] No valid TCP info data found", file=sys.stderr)
+    sys.exit(0)
 
-# normalize time
 t0 = times[0]
 times = [t - t0 for t in times]
 
-# plot cwnd
 plt.figure()
-plt.plot(times, cwnds, label="cwnd")
-
+plt.plot(times, cwnds)
 plt.xlabel("Time (s)")
 plt.ylabel("cwnd")
 plt.title("cwnd over Time")
 plt.grid()
+plt.savefig(os.path.join(path, "cwnd.png"), dpi=150, bbox_inches="tight")
+plt.close()
 
-plt.savefig(path + "cwnd.png", dpi=150, bbox_inches="tight")
-plt.show()
+plt.figure()
+plt.plot(times, rtts)
+plt.xlabel("Time (s)")
+plt.ylabel("RTT (ms)")
+plt.title("TCP RTT over Time")
+plt.grid()
+plt.savefig(os.path.join(path, "tcp_rtt.png"), dpi=150, bbox_inches="tight")
+plt.close()
