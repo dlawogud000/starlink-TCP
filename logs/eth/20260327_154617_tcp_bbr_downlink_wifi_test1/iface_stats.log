@@ -1,0 +1,300 @@
+1774593986.864646041
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    1706184    8182     0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    795337     4747     0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593987.880478488
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    12349652   15229    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    924308     6242     0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593988.892307587
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    24127892   23015    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    1030786    7477     0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593989.904228636
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    36382932   31116    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    1139478    8739     0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593990.916691092
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    48612182   39199    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    1310970    10729    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593991.928993898
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    60659858   47164    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    1444344    12278    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593992.940981741
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    73085928   55377    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    1585504    13916    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593993.958209290
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    85053490   63289    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    1727908    15570    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593994.971584578
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    97048070   71217    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    1890284    17454    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593995.984049846
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    109440884  79409    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    2067174    19509    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593996.996287418
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    121571724  87427    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    2224368    21334    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593998.009292696
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    129021397  92355    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    2292817    22128    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774593999.081853015
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    139059791  98990    0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    2378949    23126    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594000.095342684
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    144857719  102827   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    2414785    23540    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594001.103890247
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    151035511  106913   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    2450843    23957    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594002.113622161
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    158786349  112038   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    2491337    24426    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594003.126043080
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    167048971  117502   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    2529541    24868    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594004.138135274
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    177070949  124129   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    2599015    25673    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594005.145316101
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    189309335  132219   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    2772637    27690    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594006.158696341
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    201682415  140397   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    2957165    29832    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594007.165514837
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    213858554  148455   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    3144279    31977    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594008.171975963
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    225887956  156406   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    3320993    34028    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594009.180442719
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    238245948  164575   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    3503731    36151    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594010.192526614
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    250658392  172779   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    3680017    38198    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594011.200470468
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    262745378  180769   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    3851231    40187    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594012.208480802
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    275113916  188944   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    4029543    42257    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594013.221369976
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    287258500  196973   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    4199811    44235    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594014.234150241
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    299604328  205133   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    4366931    46175    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594015.241512793
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    311794381  213198   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    4537629    48158    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
+1774594016.254403412
+4: wlp5s0: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc noqueue state UP mode DORMANT group default qlen 1000
+    link/ether 9c:b6:d0:c9:a3:a3 brd ff:ff:ff:ff:ff:ff
+    RX: bytes  packets  errors  dropped overrun mcast   
+    321898759  219901   0       2807    0       0       
+    TX: bytes  packets  errors  dropped carrier collsns 
+    4679160    49761    0       0       0       0       
+qdisc noqueue 0: root refcnt 2 
+ Sent 0 bytes 0 pkt (dropped 0, overlimits 0 requeues 0) 
+ backlog 0b 0p requeues 0
