@@ -1,0 +1,14 @@
+===== date =====
+2026-03-26T13:10:16,408141706+09:00
+===== timedatectl =====
+               Local time: 목 2026-03-26 13:10:16 KST
+           Universal time: 목 2026-03-26 04:10:16 UTC
+                 RTC time: 목 2026-03-26 04:10:16    
+                Time zone: Asia/Seoul (KST, +0900)   
+System clock synchronized: yes                       
+              NTP service: active                    
+          RTC in local TZ: no                        
+===== chronyc tracking =====
+/home/jh/git/starlink-TCP/bin/sync_time_check.sh: line 11: chronyc: command not found
+===== chronyc sources =====
+/home/jh/git/starlink-TCP/bin/sync_time_check.sh: line 14: chronyc: command not found
