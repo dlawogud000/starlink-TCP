@@ -39,7 +39,7 @@ t0 = times[0]
 times = [t - t0 for t in times]
 
 plt.figure()
-plt.plot(times, rtts)
+plt.scatter(times, rtts, s=10)
 plt.xlabel("Time (s)")
 plt.ylabel("RTT (ms)")
 plt.title("RTT over Time")
