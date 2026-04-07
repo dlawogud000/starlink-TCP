@@ -1,0 +1,35 @@
+===== date =====
+2026-04-07T13:03:27,689343815+09:00
+===== timedatectl =====
+               Local time: 화 2026-04-07 13:03:27 KST
+           Universal time: 화 2026-04-07 04:03:27 UTC
+                 RTC time: 화 2026-04-07 04:03:27
+                Time zone: Asia/Seoul (KST, +0900)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no
+===== chronyc tracking =====
+Reference ID    : FD671BEC (vps-tyo2.orleans.ddnss.de)
+Stratum         : 3
+Ref time (UTC)  : Tue Apr 07 04:00:37 2026
+System time     : 0.000661651 seconds slow of NTP time
+Last offset     : -0.000226095 seconds
+RMS offset      : 0.001169238 seconds
+Frequency       : 19.760 ppm fast
+Residual freq   : -0.003 ppm
+Skew            : 0.470 ppm
+Root delay      : 0.025487890 seconds
+Root dispersion : 0.004456297 seconds
+Update interval : 1024.2 seconds
+Leap status     : Normal
+===== chronyc sources =====
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^- prod-ntp-3.ntp4.ps5.cano>     2  10   377   121  +8948us[+8948us] +/-  129ms
+^- prod-ntp-5.ntp1.ps5.cano>     2  10   377   328   -700us[ -924us] +/-  121ms
+^- prod-ntp-4.ntp1.ps5.cano>     2  10   377   161    +10ms[  +10ms] +/-  128ms
+^- prod-ntp-5.ntp1.ps5.cano>     2  10   377   222  +1902us[+1676us] +/-  144ms
+^- time.paina.net                1  10   377   611  -3674us[-3894us] +/-   50ms
+^- x.ns.gin.ntt.net              2  10   377   560  +1025us[ +804us] +/-   98ms
+^+ vps-tyo4.orleans.ddnss.de     2  10   377   145  +3025us[+3025us] +/-   17ms
+^* vps-tyo2.orleans.ddnss.de     2  10   377   169   -484us[ -710us] +/-   18ms

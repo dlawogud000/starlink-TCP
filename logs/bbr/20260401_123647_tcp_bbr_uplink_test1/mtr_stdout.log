@@ -1,0 +1,1 @@
+mtr: non-root users cannot request an interval < 1.0 seconds
