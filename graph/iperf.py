@@ -22,6 +22,9 @@ with open(json_file) as f:
 
 times = []
 throughputs = []
+jitters = []
+losses = []
+is_udp = data.get("start", {}).get("test_start", {}).get("protocol", "").upper() == "UDP"
 
 for interval in data.get("intervals", []):
     s = interval.get("sum", {})
@@ -31,6 +34,10 @@ for interval in data.get("intervals", []):
         continue
     times.append(float(t))
     throughputs.append(float(bw) / 1e6)  # Mbps
+
+    if is_udp:
+        jitters.append(float(s.get("jitter_ms", 0.0)))
+        losses.append(float(s.get("lost_percent", 0.0)))
 
 if not times:
     print("[WARN] No iperf interval data found", file=sys.stderr)
@@ -42,6 +49,24 @@ plt.xlabel("Time (s)")
 plt.ylabel("Throughput (Mbps)")
 plt.title("Throughput over Time")
 plt.grid()
-
 plt.savefig(os.path.join(path, "iperf3.png"), dpi=150, bbox_inches="tight")
 plt.close()
+
+if is_udp:
+    plt.figure()
+    plt.plot(times[:len(jitters)], jitters)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Jitter (ms)")
+    plt.title("Server UDP Jitter over Time")
+    plt.grid()
+    plt.savefig(os.path.join(path, "server_udp_jitter.png"), dpi=150, bbox_inches="tight")
+    plt.close()
+
+    plt.figure()
+    plt.plot(times[:len(losses)], losses)
+    plt.xlabel("Time (s)")
+    plt.ylabel("Loss (%)")
+    plt.title("Server UDP Loss over Time")
+    plt.grid()
+    plt.savefig(os.path.join(path, "server_udp_loss.png"), dpi=150, bbox_inches="tight")
+    plt.close()

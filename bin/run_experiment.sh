@@ -36,10 +36,6 @@ cleanup() {
 
 plot_graphs() {
   echo "[INFO] Generating plots..."
-
-  python3 "$BASE_DIR/graph/ping.py" "$OUT_DIR" \
-    > "$OUT_DIR/plot_ss_rtt.stdout.log" || true
-
   if [ "$PROTOCOL" = "tcp" ] || [ "$PROTOCOL" = "udp" ]; then
     python3 "$BASE_DIR/graph/iperf.py" "$OUT_DIR" \
       > "$OUT_DIR/plot_iperf.stdout.log" || true
