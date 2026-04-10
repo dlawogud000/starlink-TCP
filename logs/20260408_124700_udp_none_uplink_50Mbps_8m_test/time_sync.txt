@@ -1,0 +1,35 @@
+===== date =====
+2026-04-08T12:47:00,053956942+09:00
+===== timedatectl =====
+               Local time: 수 2026-04-08 12:47:00 KST
+           Universal time: 수 2026-04-08 03:47:00 UTC
+                 RTC time: 수 2026-04-08 03:47:00
+                Time zone: Asia/Seoul (KST, +0900)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no
+===== chronyc tracking =====
+Reference ID    : 2F81F6AF (vps-tyo4.orleans.ddnss.de)
+Stratum         : 3
+Ref time (UTC)  : Wed Apr 08 03:34:01 2026
+System time     : 0.000168736 seconds slow of NTP time
+Last offset     : -0.000121749 seconds
+RMS offset      : 0.000656628 seconds
+Frequency       : 19.635 ppm fast
+Residual freq   : +0.002 ppm
+Skew            : 0.198 ppm
+Root delay      : 0.029336449 seconds
+Root dispersion : 0.002486389 seconds
+Update interval : 1028.0 seconds
+Leap status     : Normal
+===== chronyc sources =====
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^- prod-ntp-3.ntp1.ps5.cano>     2  10   377   707  +5170us[+5170us] +/-  126ms
+^- prod-ntp-5.ntp4.ps5.cano>     2  10   377   953   +838us[ +715us] +/-  119ms
+^- prod-ntp-4.ntp1.ps5.cano>     2  10   377   684    +10ms[  +10ms] +/-  133ms
+^- prod-ntp-5.ntp1.ps5.cano>     2  10   377   855  +3245us[+3123us] +/-  127ms
+^- time.paina.net                1  10   377   36m  -3592us[-3486us] +/-   48ms
+^- x.ns.gin.ntt.net              2  10   377   101  -2397us[-2397us] +/-   96ms
+^* vps-tyo4.orleans.ddnss.de     2  10   377   779  -1889us[-2011us] +/-   15ms
+^+ vps-tyo2.orleans.ddnss.de     2  10   377   752  -2066us[-2066us] +/-   16ms

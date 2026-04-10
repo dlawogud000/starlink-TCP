@@ -28,7 +28,7 @@ if [ "$PROTOCOL" = "tcp" ]; then
   iperf3 -B "$LOCAL_IP" -c "$SERVER_IP" -p "$SERVER_PORT" $REVERSE_FLAG -4 -t "$DURATION" -i "$IPERF_INTERVAL" --json \
     > "$OUT_DIR/iperf.json" 2> "$OUT_DIR/iperf.stderr.log"
 elif [ "$PROTOCOL" = "udp" ]; then
-  UDP_RATE="${UDP_RATE:-50M}" # change udp rate
+  UDP_RATE="${UDP_RATE}" # change udp rate
   iperf3 -B "$LOCAL_IP" -c "$SERVER_IP" -p "$SERVER_PORT" -u $REVERSE_FLAG -4 -b "$UDP_RATE" -t "$DURATION" -i "$IPERF_INTERVAL" --json \
     > "$OUT_DIR/iperf.json" 2> "$OUT_DIR/iperf.stderr.log"
 else

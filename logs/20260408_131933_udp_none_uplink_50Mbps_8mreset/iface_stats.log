@@ -1,0 +1,12 @@
+1775621973.974479917
+5: enx588694fda289: <BROADCAST,MULTICAST,UP,LOWER_UP> mtu 1500 qdisc fq_codel state UP mode DEFAULT group default qlen 1000
+    link/ether 58:86:94:fd:a2:89 brd ff:ff:ff:ff:ff:ff
+    RX:   bytes  packets errors dropped  missed   mcast           
+    13600687016  9260812      0       1       0       0 
+    TX:   bytes  packets errors dropped carrier collsns           
+    22753633412 15758506      0       0       0       0 
+qdisc fq_codel 0: root refcnt 2 limit 10240p flows 1024 quantum 1514 target 5ms interval 100ms memory_limit 32Mb ecn drop_batch 64 
+ Sent 22766527070 bytes 15758506 pkt (dropped 0, overlimits 0 requeues 31) 
+ backlog 0b 0p requeues 31
+  maxpacket 1490 drop_overlimit 0 new_flow_count 2658 ecn_mark 0
+  new_flows_len 0 old_flows_len 0
