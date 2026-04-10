@@ -1,0 +1,35 @@
+===== date =====
+2026-04-10T18:12:22,045537119+09:00
+===== timedatectl =====
+               Local time: 금 2026-04-10 18:12:22 KST
+           Universal time: 금 2026-04-10 09:12:22 UTC
+                 RTC time: 금 2026-04-10 09:12:22
+                Time zone: Asia/Seoul (KST, +0900)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no
+===== chronyc tracking =====
+Reference ID    : 7566B258 (time.paina.net)
+Stratum         : 2
+Ref time (UTC)  : Fri Apr 10 09:11:28 2026
+System time     : 0.000225089 seconds fast of NTP time
+Last offset     : +0.000225449 seconds
+RMS offset      : 0.001576040 seconds
+Frequency       : 18.598 ppm fast
+Residual freq   : -0.009 ppm
+Skew            : 0.235 ppm
+Root delay      : 0.046083074 seconds
+Root dispersion : 0.024322351 seconds
+Update interval : 1025.6 seconds
+Leap status     : Normal
+===== chronyc sources =====
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^? prod-ntp-3.ntp1.ps5.cano>     2  10     0   38h    -50ms[+6722us] +/-  135ms
+^- prod-ntp-5.ntp1.ps5.cano>     2  10   377   743  +4210us[+4509us] +/-  126ms
+^? prod-ntp-4.ntp1.ps5.cano>     2  10     0   38h    -48ms[+9311us] +/-  130ms
+^? prod-ntp-5.ntp4.ps5.cano>     2  10     0   38h    -51ms[+5680us] +/-  129ms
+^* time.paina.net                1  10   257    53   -133us[  +92us] +/-   46ms
+^+ x.ns.gin.ntt.net              2  10   377   127  +1012us[+1245us] +/-   91ms
+^? vps-tyo4.orleans.ddnss.de     2  10     0   38h    -60ms[-2880us] +/-   22ms
+^? vps-tyo2.orleans.ddnss.de     2  10     0   38h    -60ms[-3377us] +/-   23ms
