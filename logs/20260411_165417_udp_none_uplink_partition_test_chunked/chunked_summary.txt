@@ -1,0 +1,18 @@
+protocol=UDP
+num_chunks=5
+total_bytes=3749950760
+active_transfer_seconds=300.000288
+wall_clock_seconds=322.909700
+avg_mbps_active_only=99.998591
+avg_mbps_wall_clock=92.904010
+total_packets=2589745
+total_lost_packets=0
+loss_pct=0.000000
+avg_jitter_ms=0.000000
+
+[per_chunk]
+chunk1: avg_mbps=99.999, bytes=749990152, loss_pct=0.000, avg_jitter_ms=0.000, wall_start=1775894058.189101, wall_end=1775894118.736141
+chunk2: avg_mbps=99.999, bytes=749990152, loss_pct=0.000, avg_jitter_ms=0.000, wall_start=1775894123.738945, wall_end=1775894184.314261
+chunk3: avg_mbps=99.999, bytes=749990152, loss_pct=0.000, avg_jitter_ms=0.000, wall_start=1775894189.316969, wall_end=1775894249.827897
+chunk4: avg_mbps=99.999, bytes=749990152, loss_pct=0.000, avg_jitter_ms=0.000, wall_start=1775894254.830936, wall_end=1775894315.419636
+chunk5: avg_mbps=99.999, bytes=749990152, loss_pct=0.000, avg_jitter_ms=0.000, wall_start=1775894320.423649, wall_end=1775894381.098801

@@ -1,0 +1,10 @@
+{
+	"start":	{
+		"connected":	[],
+		"version":	"iperf 3.9",
+		"system_info":	"Linux nsl-System-Product-Name 6.8.0-107-generic #107~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Wed Mar 18 23:40:43 UTC  x86_64"
+	},
+	"intervals":	[],
+	"end":	{
+	}
+}

@@ -20,6 +20,7 @@ if not os.path.exists(logfile):
 times = []
 cwnds = []
 rtts = []
+rcv_rtts = []
 
 current_time = None
 best_entry = None
@@ -27,6 +28,7 @@ best_entry = None
 def parse_metrics(line):
     cwnd = None
     rtt = None
+    rcv_rtt = None
     bytes_sent = -1
 
     m = re.search(r"cwnd:(\d+)", line)
@@ -36,18 +38,23 @@ def parse_metrics(line):
     m = re.search(r"rtt:([0-9.]+)", line)
     if m:
         rtt = float(m.group(1))
+    
+    m = re.search(r"rcv_rtt=([0-9.]+)", line)
+    if m:
+        rcv_rtt = float(m.group(1))
 
     m = re.search(r"bytes_sent:(\d+)", line)
     if m:
         bytes_sent = int(m.group(1))
 
-    return cwnd, rtt, bytes_sent
+    return cwnd, rtt, rcv_rtt, bytes_sent
 
 def flush_best():
     if best_entry is not None:
         times.append(best_entry["time"])
         cwnds.append(best_entry["cwnd"])
         rtts.append(best_entry["rtt"])
+        rcv_rtts.append(best_entry["rcv_rtt"])
 
 with open(logfile) as f:
     for line in f:
@@ -59,9 +66,9 @@ with open(logfile) as f:
             best_entry = None
             continue
 
-        if "cwnd:" in line and "rtt:" in line:
-            cwnd, rtt, bytes_sent = parse_metrics(line)
-            if cwnd is None or rtt is None or current_time is None:
+        if "cwnd:" in line and "rtt:" in line and "rcv_rtt=" in line:
+            cwnd, rtt, rcv_rtt, bytes_sent = parse_metrics(line)
+            if cwnd is None or rtt is None or rcv_rtt is None or current_time is None:
                 continue
 
             if best_entry is None or bytes_sent > best_entry["bytes_sent"]:
@@ -69,6 +76,7 @@ with open(logfile) as f:
                     "time": current_time,
                     "cwnd": cwnd,
                     "rtt": rtt,
+                    "rcv_rtt": rcv_rtt,
                     "bytes_sent": bytes_sent,
                 }
 
@@ -82,7 +90,7 @@ t0 = times[0]
 times = [t - t0 for t in times]
 
 plt.figure()
-plt.scatter(times, cwnds, s=10)
+plt.plot(times, cwnds)
 plt.xlabel("Time (s)")
 plt.ylabel("cwnd")
 plt.title("cwnd over Time")
@@ -97,4 +105,13 @@ plt.ylabel("RTT (ms)")
 plt.title("TCP RTT over Time")
 plt.grid()
 plt.savefig(os.path.join(path, "tcp_rtt.png"), dpi=150, bbox_inches="tight")
+plt.close()
+
+plt.figure()
+plt.scatter(times, rcv_rtts, s=10)
+plt.xlabel("Time (s)")
+plt.ylabel("RCV_RTT (ms)")
+plt.title("TCP RCV_RTT over Time")
+plt.grid()
+plt.savefig(os.path.join(path, "tcp_rcv_rtt.png"), dpi=150, bbox_inches="tight")
 plt.close()
