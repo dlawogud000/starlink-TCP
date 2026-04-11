@@ -1,0 +1,13 @@
+timestamp=2026-04-11T20:46:19+09:00
+protocol=tcp
+cc=bbr
+direction=downlink
+run_id=sh_multi_test_04
+server_ip=165.194.35.203
+server_http_url=nsl3.cau.ac.kr
+ue_iface=enx588694fda289
+duration=300
+kernel=Linux nsl-System-Product-Name 6.8.0-107-generic #107~22.04.1-Ubuntu SMP PREEMPT_DYNAMIC Wed Mar 18 23:40:43 UTC  x86_64 x86_64 x86_64 GNU/Linux
+tcp_cc_current=cubic
+tcp_available=reno cubic bbr
+host=nsl-System-Product-Name

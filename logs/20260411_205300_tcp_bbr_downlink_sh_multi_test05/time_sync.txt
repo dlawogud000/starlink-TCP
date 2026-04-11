@@ -1,0 +1,35 @@
+===== date =====
+2026-04-11T20:53:00,891648243+09:00
+===== timedatectl =====
+               Local time: 토 2026-04-11 20:53:00 KST
+           Universal time: 토 2026-04-11 11:53:00 UTC
+                 RTC time: 토 2026-04-11 11:53:00
+                Time zone: Asia/Seoul (KST, +0900)
+System clock synchronized: yes
+              NTP service: active
+          RTC in local TZ: no
+===== chronyc tracking =====
+Reference ID    : D36C75D3 (211.108.117.211)
+Stratum         : 3
+Ref time (UTC)  : Sat Apr 11 11:42:18 2026
+System time     : 0.000145176 seconds slow of NTP time
+Last offset     : +0.000397589 seconds
+RMS offset      : 0.001081462 seconds
+Frequency       : 17.502 ppm fast
+Residual freq   : +0.007 ppm
+Skew            : 0.193 ppm
+Root delay      : 0.074621148 seconds
+Root dispersion : 0.002831893 seconds
+Update interval : 1035.9 seconds
+Leap status     : Normal
+===== chronyc sources =====
+MS Name/IP address         Stratum Poll Reach LastRx Last sample               
+===============================================================================
+^- prod-ntp-4.ntp1.ps5.cano>     2  10   377   752  +6639us[+7034us] +/-  142ms
+^- alphyn.canonical.com          2  10   377   287    -30ms[  -30ms] +/-  156ms
+^- prod-ntp-5.ntp4.ps5.cano>     2  10   377   928  +3518us[+3909us] +/-  142ms
+^- prod-ntp-3.ntp1.ps5.cano>     2  10   377   930  +9307us[+9698us] +/-  147ms
+^+ mail.zeroweb.kr               3  10   377    81  +7428us[+7428us] +/-   63ms
+^+ 121.174.142.82                3  10   377   387  +3371us[+3371us] +/-   86ms
+^+ 121.134.215.104               2  10   377   50m   -873us[ -248us] +/-   41ms
+^* 211.108.117.211               2  10   377   643  -7501us[-7103us] +/-   42ms
