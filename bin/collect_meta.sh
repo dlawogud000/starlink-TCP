@@ -11,9 +11,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$BASE_DIR/config/experiment.conf"
 
-if [ "$PROTOCOL" = "tcp" ]; then
-  sudo sysctl -w net.ipv4.tcp_congestion_control="$CC"
-fi
+#run_iperf와 중복 호출로 삭제
+# if [ "$PROTOCOL" = "tcp" ]; then 
+#  sudo sysctl -w net.ipv4.tcp_congestion_control="$CC"
+# fi
 
 cat > "$OUT_DIR/meta.txt" <<EOF
 timestamp=$(date --iso-8601=seconds)
