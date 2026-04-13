@@ -29,7 +29,7 @@ if [ "$PROTOCOL" = "tcp" ]; then
     > "$OUT_DIR/iperf.json" 2> "$OUT_DIR/iperf.stderr.log"
 elif [ "$PROTOCOL" = "udp" ]; then
   UDP_RATE="${UDP_RATE}" # change udp rate
-  iperf3 -B "$LOCAL_IP" -c "$SERVER_IP" -p "$SERVER_PORT" -u $REVERSE_FLAG -4 -b "$UDP_RATE" -t "$DURATION" -i "$IPERF_INTERVAL" --json \
+  iperf3 -B "$LOCAL_IP" -c "$SERVER_IP" -p "$SERVER_PORT" -u $REVERSE_FLAG -4 -b "$UDP_RATE" -t "$DURATION" -i "$IPERF_INTERVAL" --json --get-server-output \
     > "$OUT_DIR/iperf.json" 2> "$OUT_DIR/iperf.stderr.log"
 else
   echo "[ERROR] Unsupported protocol: $PROTOCOL"
