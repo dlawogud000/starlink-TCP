@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
-import json
 import math
 import os
+import re
 import sys
+import statistics
 
 import matplotlib
 matplotlib.use("Agg")
@@ -15,11 +16,11 @@ if len(sys.argv) < 2:
     sys.exit(1)
 
 path = sys.argv[1]
-json_file = os.path.join(path, "iperf.json")
+logfile = os.path.join(path, "ss_tcpinfo.log")
 meta_file = os.path.join(path, "meta.txt")
 
-if not os.path.exists(json_file):
-    print(f"[WARN] Missing {json_file}", file=sys.stderr)
+if not os.path.exists(logfile):
+    print(f"[WARN] Missing {logfile}", file=sys.stderr)
     sys.exit(0)
 
 
@@ -36,13 +37,6 @@ def load_meta(meta_path):
             k, v = line.split("=", 1)
             meta[k.strip()] = v.strip()
     return meta
-
-
-def safe_float(x, default=None):
-    try:
-        return float(x)
-    except Exception:
-        return default
 
 
 def safe_int(x, default=None):
@@ -108,198 +102,162 @@ def save_split_graphs(x, y, ylabel, title_prefix, save_dir, file_prefix, window=
         plt.close()
 
 
-def parse_throughput(data):
-    times = []
-    throughputs = []
+def parse_metrics(line):
+    cwnd = None
+    rtt = None
+    bytes_sent = -1
 
-    for interval in data.get("intervals", []):
-        s = interval.get("sum", {})
-        t = s.get("end")
-        bw = s.get("bits_per_second")
-        if t is None or bw is None:
-            continue
+    m = re.search(r"cwnd:(\d+)", line)
+    if m:
+        cwnd = int(m.group(1))
 
-        times.append(float(t))
-        throughputs.append(float(bw) / 1e6)  # Mbps
+    m = re.search(r"rtt:([0-9.]+)", line)
+    if m:
+        rtt = float(m.group(1))
 
-    if not times:
-        return [], []
+    m = re.search(r"bytes_sent:(\d+)", line)
+    if m:
+        bytes_sent = int(m.group(1))
 
-    pairs = sorted(zip(times, throughputs), key=lambda x: x[0])
-    times, throughputs = zip(*pairs)
-    return list(times), list(throughputs)
+    return cwnd, rtt, bytes_sent
 
-
-def parse_udp_metrics_from_data(data, receiver_only=False):
-    times = []
-    jitters = []
-    losses = []
-
-    for interval in data.get("intervals", []):
-        s = interval.get("sum", {})
-        t = s.get("end")
-        jitter = s.get("jitter_ms")
-        loss = s.get("lost_percent")
-
-        if t is None or jitter is None or loss is None:
-            continue
-
-        if receiver_only:
-            sender_flag = s.get("sender")
-            if sender_flag is True:
-                continue
-
-        times.append(float(t))
-        jitters.append(float(jitter))
-        losses.append(float(loss))
-
-    if not times:
-        return [], [], []
-
-    pairs = sorted(zip(times, jitters, losses), key=lambda x: x[0])
-    times = [p[0] for p in pairs]
-    jitters = [p[1] for p in pairs]
-    losses = [p[2] for p in pairs]
-    return times, jitters, losses
-
-
-def parse_server_output_json(data):
-    """
-    --get-server-output 사용 시 iperf3 버전에 따라
-    server_output_json 이 dict 이거나 str(JSON text)일 수 있음
-    """
-    soj = data.get("server_output_json")
-
-    if isinstance(soj, dict):
-        return soj
-
-    if isinstance(soj, str):
-        try:
-            return json.loads(soj)
-        except Exception:
-            return None
-
-    return None
-
-
-with open(json_file) as f:
-    data = json.load(f)
 
 meta = load_meta(meta_file)
-
-protocol = data.get("start", {}).get("test_start", {}).get("protocol", "").lower()
+protocol = meta.get("protocol", "tcp").lower()
 direction = meta.get("direction", "unknown").lower()
+parallel = safe_int(meta.get("parallel"), 1)
 
-parallel = safe_int(meta.get("parallel"), None)
-if parallel is None:
-    intervals = data.get("intervals", [])
-    if intervals:
-        parallel = len(intervals[0].get("streams", []))
-    else:
-        parallel = 1
-
-mode = "single" if parallel == 1 else "multi"
-
-title_prefix = f"{protocol.upper()} {mode} {direction}".strip()
-
-# Throughput output dir
-throughput_dir = os.path.join(path, "analyze_log", "throughput")
-os.makedirs(throughput_dir, exist_ok=True)
-
-times, throughputs = parse_throughput(data)
-
-if not times:
-    print("[WARN] No iperf interval data found", file=sys.stderr)
+if protocol != "tcp":
+    print("[INFO] tcpinfo.py skipped (protocol is not tcp)")
     sys.exit(0)
 
+# 현재 구조에서는 uplink sender 측 tcpinfo 해석이 가장 자연스러움
+if direction != "uplink":
+    print("[INFO] tcpinfo.py skipped (direction is not uplink; sender-side tcpinfo is recommended)")
+    sys.exit(0)
+
+mode = "single" if parallel == 1 else "multi"
+title_prefix = f"TCP {mode} {direction}"
+
+cwnd_dir = os.path.join(path, "analyze_log", "cwnd")
+rtt_dir = os.path.join(path, "analyze_log", "rtt")
+os.makedirs(cwnd_dir, exist_ok=True)
+os.makedirs(rtt_dir, exist_ok=True)
+
+times = []
+cwnds = []
+rtts = []
+
+current_time = None
+current_entries = []
+
+
+def flush_block():
+    global current_entries
+
+    if current_time is None or not current_entries:
+        current_entries = []
+        return
+
+    block_cwnds = [e["cwnd"] for e in current_entries if e["cwnd"] is not None]
+    block_rtts = [e["rtt"] for e in current_entries if e["rtt"] is not None]
+
+    if not block_cwnds or not block_rtts:
+        current_entries = []
+        return
+
+    # single이면 사실상 값 하나일 가능성이 큼
+    # multi면 median 집계
+    if mode == "single":
+        chosen = max(current_entries, key=lambda e: e["bytes_sent"])
+        times.append(current_time)
+        cwnds.append(chosen["cwnd"])
+        rtts.append(chosen["rtt"])
+    else:
+        times.append(current_time)
+        cwnds.append(statistics.median(block_cwnds))
+        rtts.append(statistics.median(block_rtts))
+
+    current_entries = []
+
+
+with open(logfile) as f:
+    for raw in f:
+        line = raw.strip()
+
+        if re.match(r"^\d+\.\d+$", line):
+            flush_block()
+            current_time = float(line)
+            current_entries = []
+            continue
+
+        if "cwnd:" in line and "rtt:" in line:
+            cwnd, rtt, bytes_sent = parse_metrics(line)
+            if cwnd is None or rtt is None or current_time is None:
+                continue
+
+            current_entries.append({
+                "cwnd": cwnd,
+                "rtt": rtt,
+                "bytes_sent": bytes_sent,
+            })
+
+flush_block()
+
+if not times:
+    print("[WARN] No valid TCP info data found", file=sys.stderr)
+    sys.exit(0)
+
+t0 = times[0]
+times = [t - t0 for t in times]
+
+cwnd_pairs = sorted(zip(times, cwnds), key=lambda x: x[0])
+times_cwnd, cwnds = zip(*cwnd_pairs)
+times_cwnd = list(times_cwnd)
+cwnds = list(cwnds)
+
+rtt_pairs = sorted(zip(times, rtts), key=lambda x: x[0])
+times_rtt, rtts = zip(*rtt_pairs)
+times_rtt = list(times_rtt)
+rtts = list(rtts)
+
 save_full_graph(
-    times,
-    throughputs,
-    "Throughput (Mbps)",
-    f"{title_prefix} Throughput over Time",
-    throughput_dir,
-    "throughput_full.png",
+    times_cwnd,
+    cwnds,
+    "cwnd",
+    f"{title_prefix} cwnd over Time",
+    cwnd_dir,
+    "cwnd_full.png",
 )
 save_split_graphs(
-    times,
-    throughputs,
-    "Throughput (Mbps)",
-    f"{title_prefix} Throughput over Time",
-    throughput_dir,
-    "throughput",
+    times_cwnd,
+    cwnds,
+    "cwnd",
+    f"{title_prefix} cwnd over Time",
+    cwnd_dir,
+    "cwnd",
     window=60,
     tick=5,
 )
 
-print(f"[OK] Saved throughput graphs to: {throughput_dir}")
+save_full_graph(
+    times_rtt,
+    rtts,
+    "RTT (ms)",
+    f"{title_prefix} RTT over Time",
+    rtt_dir,
+    "rtt_full.png",
+)
+save_split_graphs(
+    times_rtt,
+    rtts,
+    "RTT (ms)",
+    f"{title_prefix} RTT over Time",
+    rtt_dir,
+    "rtt",
+    window=60,
+    tick=5,
+)
 
-# UDP extra graphs
-if protocol == "udp":
-    udp_dir = os.path.join(path, "analyze_log", "udp")
-    os.makedirs(udp_dir, exist_ok=True)
-
-    udp_times = []
-    udp_jitters = []
-    udp_losses = []
-
-    # downlink: client receiver 값이 local json에 보통 존재
-    # uplink: server receiver 값이 더 의미 크므로 server_output_json 우선
-    if direction == "uplink":
-        server_data = parse_server_output_json(data)
-        if server_data is not None:
-            udp_times, udp_jitters, udp_losses = parse_udp_metrics_from_data(
-                server_data, receiver_only=False
-            )
-
-        if not udp_times:
-            # fallback: local json에서 receiver-side sum만 시도
-            udp_times, udp_jitters, udp_losses = parse_udp_metrics_from_data(
-                data, receiver_only=True
-            )
-    else:
-        udp_times, udp_jitters, udp_losses = parse_udp_metrics_from_data(
-            data, receiver_only=False
-        )
-
-    if udp_times:
-        save_full_graph(
-            udp_times,
-            udp_jitters,
-            "Jitter (ms)",
-            f"{title_prefix} UDP Jitter over Time",
-            udp_dir,
-            "jitter_full.png",
-        )
-        save_split_graphs(
-            udp_times,
-            udp_jitters,
-            "Jitter (ms)",
-            f"{title_prefix} UDP Jitter over Time",
-            udp_dir,
-            "jitter",
-            window=60,
-            tick=5,
-        )
-
-        save_full_graph(
-            udp_times,
-            udp_losses,
-            "Loss (%)",
-            f"{title_prefix} UDP Loss over Time",
-            udp_dir,
-            "loss_full.png",
-        )
-        save_split_graphs(
-            udp_times,
-            udp_losses,
-            "Loss (%)",
-            f"{title_prefix} UDP Loss over Time",
-            udp_dir,
-            "loss",
-            window=60,
-            tick=5,
-        )
-
-        print(f"[OK] Saved UDP graphs to: {udp_dir}")
-    else:
-        print("[INFO] No UDP jitter/loss data found")
+print(f"[OK] Saved cwnd graphs to: {cwnd_dir}")
+print(f"[OK] Saved rtt graphs to: {rtt_dir}")

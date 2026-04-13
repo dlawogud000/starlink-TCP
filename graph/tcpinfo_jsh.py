@@ -59,16 +59,29 @@ def save_full_graph(x, y, ylabel, title, save_dir, filename):
     plt.close()
 
 
-def save_split_graphs(x, y, ylabel, title_prefix, save_dir, file_prefix, window=60, tick=5):
+def save_split_graphs(
+    x,
+    y,
+    ylabel,
+    title_prefix,
+    save_dir,
+    file_prefix,
+    duration_limit=None,
+    window=60,
+    tick=5,
+):
     if not x:
         return
 
-    max_time = max(x)
-    num_windows = math.ceil(max_time / window)
+    effective_max = duration_limit if duration_limit is not None else max(x)
+    if effective_max <= 0:
+        return
+
+    num_windows = math.ceil(effective_max / window)
 
     for i in range(num_windows):
         start = i * window
-        end = min((i + 1) * window, max_time)
+        end = min((i + 1) * window, effective_max)
 
         xs = []
         ys = []
@@ -97,7 +110,7 @@ def save_split_graphs(x, y, ylabel, title_prefix, save_dir, file_prefix, window=
         plt.savefig(
             os.path.join(save_dir, f"{file_prefix}_{int(start)}_{int(end)}.png"),
             dpi=150,
-            bbox_inches="tight"
+            bbox_inches="tight",
         )
         plt.close()
 
@@ -122,16 +135,28 @@ def parse_metrics(line):
     return cwnd, rtt, bytes_sent
 
 
+def trim_series(times, values, duration_limit):
+    if duration_limit is None:
+        return times, values
+
+    filtered = [(t, v) for t, v in zip(times, values) if t <= duration_limit]
+    if not filtered:
+        return [], []
+
+    times2, values2 = zip(*filtered)
+    return list(times2), list(values2)
+
+
 meta = load_meta(meta_file)
 protocol = meta.get("protocol", "tcp").lower()
 direction = meta.get("direction", "unknown").lower()
 parallel = safe_int(meta.get("parallel"), 1)
+duration_limit = safe_int(meta.get("duration"), None)
 
 if protocol != "tcp":
     print("[INFO] tcpinfo.py skipped (protocol is not tcp)")
     sys.exit(0)
 
-# 현재 구조에서는 uplink sender 측 tcpinfo 해석이 가장 자연스러움
 if direction != "uplink":
     print("[INFO] tcpinfo.py skipped (direction is not uplink; sender-side tcpinfo is recommended)")
     sys.exit(0)
@@ -166,8 +191,6 @@ def flush_block():
         current_entries = []
         return
 
-    # single이면 사실상 값 하나일 가능성이 큼
-    # multi면 median 집계
     if mode == "single":
         chosen = max(current_entries, key=lambda e: e["bytes_sent"])
         times.append(current_time)
@@ -221,6 +244,13 @@ times_rtt, rtts = zip(*rtt_pairs)
 times_rtt = list(times_rtt)
 rtts = list(rtts)
 
+times_cwnd, cwnds = trim_series(times_cwnd, cwnds, duration_limit)
+times_rtt, rtts = trim_series(times_rtt, rtts, duration_limit)
+
+if not times_cwnd or not times_rtt:
+    print("[WARN] No valid TCP info data after duration trim", file=sys.stderr)
+    sys.exit(0)
+
 save_full_graph(
     times_cwnd,
     cwnds,
@@ -236,6 +266,7 @@ save_split_graphs(
     f"{title_prefix} cwnd over Time",
     cwnd_dir,
     "cwnd",
+    duration_limit=duration_limit,
     window=60,
     tick=5,
 )
@@ -255,6 +286,7 @@ save_split_graphs(
     f"{title_prefix} RTT over Time",
     rtt_dir,
     "rtt",
+    duration_limit=duration_limit,
     window=60,
     tick=5,
 )

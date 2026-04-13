@@ -16,10 +16,10 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$BASE_DIR/config/experiment.conf"
 
-CC="cubic"
+CC="bbr"
 DIRECTION=""
 RUN_ID=""
-PARALLEL="10"
+PARALLEL="1"
 DURATION_ARG="${DURATION:-300}"
 
 while [[ $# -gt 0 ]]; do
