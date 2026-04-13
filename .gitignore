@@ -60,3 +60,6 @@ logs/**/**/*.pcap
 bin/tmp/*.pid
 
 .vscode/settings.json
+
+#except logs
+logs/*
