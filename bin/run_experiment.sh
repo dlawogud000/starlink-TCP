@@ -28,7 +28,7 @@ echo "[INFO] Experiment ID: $EXP_ID"
 "$BASE_DIR/bin/collect_meta.sh" "$PROTOCOL" "$CC" "$DIRECTION" "$RUN_ID" "$OUT_DIR"
 "$BASE_DIR/bin/sync_time_check.sh" > "$OUT_DIR/time_sync.txt" 2>&1 || true
 
-"$BASE_DIR/bin/start_monitors.sh" "$OUT_DIR"
+"$BASE_DIR/bin/start_monitors.sh" "$OUT_DIR" "$DIRECTION"
 
 cleanup() {
   "$BASE_DIR/bin/stop_monitors.sh" "$OUT_DIR" || true
@@ -45,6 +45,9 @@ plot_graphs() {
     python3 "$BASE_DIR/graph/tcpinfo.py" "$OUT_DIR" \
       > "$OUT_DIR/plot_tcpinfo.stdout.log" || true
   fi
+
+  python3 "$BASE_DIR/graph/pop_ping_interval.py" "$OUT_DIR" \
+    > "$OUT_DIR/plot_pop_interval.stdout.log" || true
 }
 
 trap cleanup EXIT

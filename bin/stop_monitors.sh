@@ -7,7 +7,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
 source "$BASE_DIR/config/experiment.conf"
 
-for name in ping tcpdump ss iface; do
+for name in ping tcpdump ss iface pop_ping; do
   PID_FILE="$TMP_ROOT/${name}.pid"
   if [ -f "$PID_FILE" ]; then
     PID="$(cat "$PID_FILE")"

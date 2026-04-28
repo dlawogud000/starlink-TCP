@@ -132,7 +132,7 @@ if not times:
     sys.exit(0)
 
 # Combined throughput graph
-plt.figure()
+plt.figure(figsize=(len(times) * 0.03, 4))
 plt.plot(times, throughputs)
 plt.xlabel("Time (s)")
 plt.ylabel("Throughput (Mbps)")
@@ -142,7 +142,7 @@ plt.savefig(os.path.join(out_dir, "chunked_iperf3.png"), dpi=150, bbox_inches="t
 plt.close()
 
 if protocol_seen == "UDP" and udp_times:
-    plt.figure()
+    plt.figure(figsize=(len(udp_times) * 0.03, 4))
     plt.plot(udp_times, udp_losses)
     plt.xlabel("Time (s)")
     plt.ylabel("Loss (%)")
@@ -151,7 +151,7 @@ if protocol_seen == "UDP" and udp_times:
     plt.savefig(os.path.join(out_dir, "chunked_udp_loss.png"), dpi=150, bbox_inches="tight")
     plt.close()
 
-    plt.figure()
+    plt.figure(figsize=(len(udp_times) * 0.03, 4))
     plt.plot(udp_times, udp_jitters)
     plt.xlabel("Time (s)")
     plt.ylabel("Jitter (ms)")
