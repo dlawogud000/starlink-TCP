@@ -118,12 +118,7 @@ EOF
 
 "$BASE_DIR/bin/sync_time_check.sh" > "$OUT_DIR/time_sync.txt" 2>&1 || true
 
-MONITOR_IFACE="$(ip route get "$SERVER_IP" | awk '{for (i=1;i<=NF;i++) if ($i=="dev") {print $(i+1); exit}}')"
-
-echo "[INFO] Monitor interface: $MONITOR_IFACE"
-echo "monitor_iface=$MONITOR_IFACE" >> "$OUT_DIR/meta.txt"
-
-"$BASE_DIR/bin/start_monitors.sh" "$OUT_DIR" "$MONITOR_IFACE"
+"$BASE_DIR/bin/start_monitors.sh" "$OUT_DIR" "$DIRECTION"
 
 cleanup() {
   "$BASE_DIR/bin/stop_monitors.sh" "$OUT_DIR" || true
@@ -131,6 +126,7 @@ cleanup() {
 
 plot_graphs() {
   echo "[INFO] Generating plots..."
+
   python3 "$BASE_DIR/graph/iperf_jsh.py" "$OUT_DIR" \
     > "$OUT_DIR/plot_iperf.stdout.log" 2>&1 || true
 
