@@ -13,7 +13,7 @@ EOF
 }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 source "$BASE_DIR/config/experiment.conf"
 
 CC="bbr"
@@ -118,7 +118,7 @@ EOF
 
 "$BASE_DIR/bin/sync_time_check.sh" > "$OUT_DIR/time_sync.txt" 2>&1 || true
 
-"$BASE_DIR/bin/start_monitors.sh" "$OUT_DIR" "$DIRECTION"
+"$SCRIPT_DIR/start_monitors.sh" "$OUT_DIR" "$DIRECTION"
 
 cleanup() {
   "$BASE_DIR/bin/stop_monitors.sh" "$OUT_DIR" || true

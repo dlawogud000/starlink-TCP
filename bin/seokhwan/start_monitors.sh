@@ -5,8 +5,10 @@ OUT_DIR="$1"
 DIRECTION="$2"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
+BASE_DIR="$(cd "$SCRIPT_DIR/../.." && pwd)"
 source "$BASE_DIR/config/experiment.conf"
+
+TMP_ROOT="${BASE_DIR}/tmp"
 
 mkdir -p "$OUT_DIR"
 mkdir -p "$TMP_ROOT"
