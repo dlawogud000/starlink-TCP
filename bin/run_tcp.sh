@@ -4,11 +4,11 @@ set -euo pipefail
 usage() {
   cat <<EOF
 Usage:
-  $0 --cc <cubic|bbr> --direction <uplink|downlink> --run-id <id> [--parallel <n>] [--duration <sec>]
+  $0 --cc <cubic|bbr> --direction <uplink|downlink> --run-id <id> [--parallel <n>] [--duration <sec>] [--rwnd <size>]
 
 Example:
-  $0 --cc cubic --direction uplink --run-id test01 --parallel 10 --duration 300
-  $0 --cc bbr   --direction downlink --run-id test02 --parallel 1 --duration 180
+  $0 --cc cubic --direction downlink --run-id test01 --parallel 10 --duration 300
+  $0 --cc bbr   --direction downlink --run-id test02 --parallel 1  --duration 180 --rwnd 64K
 EOF
 }
 
@@ -21,6 +21,7 @@ DIRECTION=""
 RUN_ID=""
 PARALLEL="1"
 DURATION_ARG="${DURATION:-300}"
+RWND=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -42,6 +43,10 @@ while [[ $# -gt 0 ]]; do
       ;;
     --duration)
       DURATION_ARG="$2"
+      shift 2
+      ;;
+    --rwnd)
+      RWND="$2"
       shift 2
       ;;
     -h|--help)
@@ -82,6 +87,13 @@ if ! [[ "$DURATION_ARG" =~ ^[0-9]+$ ]] || [[ "$DURATION_ARG" -lt 1 ]]; then
   exit 1
 fi
 
+if [[ -n "$RWND" ]]; then
+  if ! [[ "$RWND" =~ ^[0-9]+([KkMmGg])?$ ]]; then
+    echo "[ERROR] --rwnd must be like 32K, 64K, 128K, 256K, 1M, or plain bytes"
+    exit 1
+  fi
+fi
+
 echo "[INFO] Checking sudo credential..."
 sudo -v
 
@@ -96,9 +108,12 @@ mkdir -p "$TMP_ROOT"
 echo "[INFO] Experiment ID: $EXP_ID"
 
 "$BASE_DIR/bin/collect_meta.sh" "tcp" "$CC" "$DIRECTION" "$RUN_ID" "$OUT_DIR"
+
 cat >> "$OUT_DIR/meta.txt" <<EOF
 parallel=$PARALLEL
 duration=$DURATION_ARG
+rwnd=${RWND:-auto}
+rwnd_method=iperf3_window
 EOF
 
 "$BASE_DIR/bin/sync_time_check.sh" > "$OUT_DIR/time_sync.txt" 2>&1 || true
@@ -119,16 +134,36 @@ plot_graphs() {
 
 trap cleanup EXIT
 
-sudo sysctl -w net.ipv4.tcp_congestion_control="$CC" >/dev/null
-
-REVERSE_FLAG=""
-if [[ "$DIRECTION" == "downlink" ]]; then
-  REVERSE_FLAG="-R"
+if [[ "$DIRECTION" == "uplink" ]]; then
+  echo "[INFO] Setting local TCP congestion control to $CC"
+  sudo sysctl -w net.ipv4.tcp_congestion_control="$CC" >/dev/null
+else
+  echo "[WARN] Downlink mode: sender is nsl3. Set CC on nsl3 manually:"
+  echo "       sudo sysctl -w net.ipv4.tcp_congestion_control=$CC"
 fi
 
-iperf3 -B "$LOCAL_IP" -c "$SERVER_IP" -p "$SERVER_PORT" $REVERSE_FLAG -4 \
-  -P "$PARALLEL" \
-  -t "$DURATION_ARG" -i "$IPERF_INTERVAL" --json \
+IPERF_ARGS=(
+  -B "$LOCAL_IP"
+  -c "$SERVER_IP"
+  -p "$SERVER_PORT"
+  -4
+  -P "$PARALLEL"
+  -t "$DURATION_ARG"
+  -i "$IPERF_INTERVAL"
+  --json
+)
+
+if [[ "$DIRECTION" == "downlink" ]]; then
+  IPERF_ARGS+=(-R)
+fi
+
+if [[ -n "$RWND" ]]; then
+  IPERF_ARGS+=(-w "$RWND")
+fi
+
+echo "[INFO] iperf3 args: ${IPERF_ARGS[*]}" | tee "$OUT_DIR/iperf_command.txt"
+
+iperf3 "${IPERF_ARGS[@]}" \
   > "$OUT_DIR/iperf.json" 2> "$OUT_DIR/iperf.stderr.log"
 
 cleanup
@@ -137,3 +172,4 @@ trap - EXIT
 plot_graphs
 
 echo "[INFO] TCP experiment completed: $EXP_ID"
+echo "[INFO] Output directory: $OUT_DIR"
