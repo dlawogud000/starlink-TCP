@@ -1,20 +1,44 @@
-import json
+#!/usr/bin/env python3
+import re
 import sys
 from pathlib import Path
 
+import numpy as np
 import matplotlib
 matplotlib.use("Agg")
 import matplotlib.pyplot as plt
-import matplotlib.ticker as ticker
 
 
-def load_pop_interval(path: Path):
-    ts = []
-    intervals = []
+def parse_ss_rtt_log(path: Path):
+    rows = []
+    pattern = re.compile(
+        r"^([0-9]+\.[0-9]+).*?"
+        r"rtt_ms=([0-9.]+).*?"
+        r"cwnd=([0-9]+).*?"
+        r"bytes_sent=([0-9]+)"
+    )
 
-    if not path.exists():
-        print(f"[WARN] Missing {path}")
-        return ts, intervals
+    with path.open("r", errors="ignore") as f:
+        for line in f:
+            if "no_data_connection" in line or "no_connection" in line:
+                continue
+
+            m = pattern.search(line)
+            if not m:
+                continue
+
+            ts = float(m.group(1))
+            rtt_ms = float(m.group(2))
+            cwnd = int(m.group(3))
+            bytes_sent = int(m.group(4))
+
+            rows.append((ts, rtt_ms, cwnd, bytes_sent))
+
+    return rows
+
+
+def parse_pop_interval_log(path: Path):
+    rows = []
 
     with path.open("r", errors="ignore") as f:
         for line in f:
@@ -23,500 +47,230 @@ def load_pop_interval(path: Path):
                 continue
 
             try:
-                ts.append(float(parts[0]))
-                intervals.append(float(parts[1]))
+                ts = float(parts[0])
+                interval = float(parts[1])
+                rows.append((ts, interval))
             except ValueError:
                 continue
-
-    return ts, intervals
-
-
-def load_iperf_intervals(path: Path):
-    """
-    iperf.json에서 interval별 throughput을 읽음.
-
-    반환:
-    rows = [
-        (start, end, throughput_mbps),
-        ...
-    ]
-    """
-    rows = []
-
-    if not path.exists():
-        print(f"[WARN] Missing {path}")
-        return rows
-
-    with path.open("r", errors="ignore") as f:
-        data = json.load(f)
-
-    intervals = data.get("intervals", [])
-
-    for item in intervals:
-        sum_data = item.get("sum", {})
-
-        start = sum_data.get("start")
-        end = sum_data.get("end")
-        bps = sum_data.get("bits_per_second")
-
-        if start is None or end is None or bps is None:
-            continue
-
-        start = float(start)
-        end = float(end)
-        mbps = float(bps) / 1_000_000
-
-        rows.append((start, end, mbps))
 
     return rows
 
 
-def normalize(ts, t0):
-    return [x - t0 for x in ts]
+def build_ss_throughput(ss_rows):
+    thr_rows = []
+
+    for i in range(1, len(ss_rows)):
+        prev_ts, prev_rtt, prev_cwnd, prev_bytes = ss_rows[i - 1]
+        curr_ts, curr_rtt, curr_cwnd, curr_bytes = ss_rows[i]
+
+        dt = curr_ts - prev_ts
+        dbytes = curr_bytes - prev_bytes
+
+        if dt <= 0:
+            continue
+
+        if dbytes < 0:
+            continue
+
+        mid_ts = (prev_ts + curr_ts) / 2.0
+        throughput_mbps = dbytes * 8.0 / dt / 1_000_000.0
+
+        thr_rows.append({
+            "ts": mid_ts,
+            "start": prev_ts,
+            "end": curr_ts,
+            "throughput_mbps": throughput_mbps,
+            "rtt_ms": curr_rtt,
+            "cwnd": curr_cwnd,
+            "bytes_delta": dbytes,
+            "dt": dt,
+        })
+
+    return thr_rows
+
+
+def nearest_throughput(thr_rows, target_ts):
+    if not thr_rows:
+        return None
+
+    return min(thr_rows, key=lambda x: abs(x["ts"] - target_ts))
+
+
+def containing_throughput(thr_rows, target_ts):
+    candidates = [
+        row for row in thr_rows
+        if row["start"] <= target_ts <= row["end"]
+    ]
+
+    if candidates:
+        return min(candidates, key=lambda x: abs(x["ts"] - target_ts))
+
+    return nearest_throughput(thr_rows, target_ts)
 
 
 def pearson_corr(x, y):
-    if len(x) != len(y) or len(x) < 2:
+    if len(x) < 2:
         return None
-
-    mean_x = sum(x) / len(x)
-    mean_y = sum(y) / len(y)
-
-    num = 0.0
-    den_x = 0.0
-    den_y = 0.0
-
-    for xi, yi in zip(x, y):
-        dx = xi - mean_x
-        dy = yi - mean_y
-
-        num += dx * dy
-        den_x += dx * dx
-        den_y += dy * dy
-
-    if den_x == 0 or den_y == 0:
+    if np.std(x) == 0 or np.std(y) == 0:
         return None
-
-    return num / ((den_x ** 0.5) * (den_y ** 0.5))
-
-
-def find_containing_and_previous_iperf_throughput(t, iperf_rows):
-    """
-    t를 포함하는 iperf interval의 throughput과
-    그 직전 iperf interval의 throughput을 함께 찾는다.
-
-    예:
-    t = 5.8
-    containing interval = 5.0 ~ 6.0
-    previous interval   = 4.0 ~ 5.0
-
-    반환:
-    containing_thr, previous_thr,
-    containing_start, containing_end,
-    previous_start, previous_end
-    """
-    for i, (start, end, mbps) in enumerate(iperf_rows):
-        if start <= t < end:
-            containing_thr = mbps
-            containing_start = start
-            containing_end = end
-
-            if i > 0:
-                previous_start, previous_end, previous_thr = iperf_rows[i - 1]
-            else:
-                previous_thr = None
-                previous_start = None
-                previous_end = None
-
-            return (
-                containing_thr,
-                previous_thr,
-                containing_start,
-                containing_end,
-                previous_start,
-                previous_end,
-            )
-
-    return None, None, None, None, None, None
-
-
-def find_nearest_midpoint_iperf_throughput(t, iperf_rows):
-    """
-    t와 가장 가까운 중앙 시각(midpoint)을 가진 iperf interval의 throughput을 찾는다.
-
-    각 iperf interval에 대해:
-    midpoint = (start + end) / 2
-
-    POP max 발생 시각 t와 midpoint의 거리가 가장 작은 interval을 선택한다.
-
-    반환:
-    nearest_thr, nearest_start, nearest_end, nearest_mid, nearest_distance
-    """
-    best_thr = None
-    best_start = None
-    best_end = None
-    best_mid = None
-    best_distance = None
-
-    for start, end, mbps in iperf_rows:
-        mid = (start + end) / 2.0
-        distance = abs(t - mid)
-
-        if best_distance is None or distance < best_distance:
-            best_distance = distance
-            best_thr = mbps
-            best_start = start
-            best_end = end
-            best_mid = mid
-
-    return best_thr, best_start, best_end, best_mid, best_distance
-
-
-def align_pop_max_with_iperf(
-    pop_times,
-    pop_values,
-    iperf_rows,
-    bin_size=1.0
-):
-    """
-    POP interval을 bin 단위로 묶는다.
-
-    각 bin에서:
-    1. POP interval max 값
-    2. 그 max가 관측된 시간
-    3. POP interval 시작 시간 = 관측 시간 - interval 값
-
-    을 찾는다.
-
-    throughput 매칭 기준 시간은 pop_max_time이 아니라
-    pop_event_time = pop_max_time - pop_max_value 를 사용한다.
-    """
-    pop_bins = {}
-
-    for t, v in zip(pop_times, pop_values):
-        b = int(t / bin_size)
-        pop_bins.setdefault(b, []).append((t, v))
-
-    aligned_times = []
-    aligned_event_times = []
-    aligned_pop_max = []
-
-    aligned_thr_containing = []
-    aligned_thr_previous = []
-    aligned_thr_nearest_midpoint = []
-
-    aligned_containing_ranges = []
-    aligned_previous_ranges = []
-    aligned_nearest_midpoint_ranges = []
-    aligned_nearest_midpoints = []
-    aligned_nearest_midpoint_distances = []
-
-    for b, vals in sorted(pop_bins.items()):
-        if not vals:
-            continue
-
-        # 해당 bin 안에서 POP interval이 가장 큰 순간
-        # pop_max_time은 ping 응답이 도착한 시각
-        pop_max_time, pop_max_value = max(vals, key=lambda x: x[1])
-
-        # 실제 interval이 시작된 시각을 이벤트 시각으로 사용
-        pop_event_time = pop_max_time - pop_max_value
-
-        (
-            thr_containing,
-            thr_previous,
-            containing_start,
-            containing_end,
-            previous_start,
-            previous_end,
-        ) = find_containing_and_previous_iperf_throughput(
-            pop_event_time,
-            iperf_rows
-        )
-
-        if thr_containing is None:
-            continue
-
-        (
-            thr_nearest_midpoint,
-            nearest_midpoint_start,
-            nearest_midpoint_end,
-            nearest_midpoint,
-            nearest_midpoint_distance,
-        ) = find_nearest_midpoint_iperf_throughput(
-            pop_event_time,
-            iperf_rows
-        )
-
-        aligned_times.append(pop_max_time)
-        aligned_event_times.append(pop_event_time)
-        aligned_pop_max.append(pop_max_value)
-
-        aligned_thr_containing.append(thr_containing)
-        aligned_thr_previous.append(thr_previous)
-        aligned_thr_nearest_midpoint.append(thr_nearest_midpoint)
-
-        aligned_containing_ranges.append((containing_start, containing_end))
-        aligned_previous_ranges.append((previous_start, previous_end))
-        aligned_nearest_midpoint_ranges.append(
-            (nearest_midpoint_start, nearest_midpoint_end)
-        )
-        aligned_nearest_midpoints.append(nearest_midpoint)
-        aligned_nearest_midpoint_distances.append(nearest_midpoint_distance)
-
-    return (
-        aligned_times,
-        aligned_event_times,
-        aligned_pop_max,
-        aligned_thr_containing,
-        aligned_thr_previous,
-        aligned_thr_nearest_midpoint,
-        aligned_containing_ranges,
-        aligned_previous_ranges,
-        aligned_nearest_midpoint_ranges,
-        aligned_nearest_midpoints,
-        aligned_nearest_midpoint_distances,
-    )
+    return float(np.corrcoef(x, y)[0, 1])
 
 
 def main():
     if len(sys.argv) != 3:
-        print(f"Usage: {sys.argv[0]} <EXP_DIR> <RESULT_DIR>")
+        print(f"Usage: {sys.argv[0]} <LOG_DIR> <SAVE_DIR>")
         sys.exit(1)
 
-    exp_dir = Path(sys.argv[1])
-    result_dir = Path(sys.argv[2])
-    result_dir.mkdir(parents=True, exist_ok=True)
+    log_dir = Path(sys.argv[1])
+    save_dir = Path(sys.argv[2])
 
-    exp_name = exp_dir.name
+    save_dir.mkdir(parents=True, exist_ok=True)
 
-    pop_log = exp_dir / "pop_interval.log"
-    iperf_json = exp_dir / "iperf.json"
+    ss_path = log_dir / "ss_rtt.log"
+    pop_path = log_dir / "pop_interval.log"
 
-    pop_ts, pop_intervals = load_pop_interval(pop_log)
-    iperf_rows = load_iperf_intervals(iperf_json)
-
-    if not pop_ts:
-        print("[ERROR] No pop interval data")
+    if not ss_path.exists():
+        print(f"[ERROR] Missing file: {ss_path}")
         sys.exit(1)
 
-    if not iperf_rows:
-        print("[ERROR] No iperf throughput data")
+    if not pop_path.exists():
+        print(f"[ERROR] Missing file: {pop_path}")
         sys.exit(1)
 
-    # pop_interval은 epoch timestamp이고,
-    # iperf time은 실험 시작 후 상대시간이므로
-    # pop_interval은 첫 timestamp 기준으로 0초부터 맞춤
-    pop_x = normalize(pop_ts, pop_ts[0])
+    ss_rows = parse_ss_rtt_log(ss_path)
+    pop_rows = parse_pop_interval_log(pop_path)
 
-    iperf_mid_times = [
-        (start + end) / 2.0
-        for start, end, _ in iperf_rows
-    ]
+    if len(ss_rows) < 2:
+        print("[ERROR] Not enough ss_rtt.log data")
+        sys.exit(1)
 
-    throughput_mbps = [
-        mbps
-        for _, _, mbps in iperf_rows
-    ]
+    if not pop_rows:
+        print("[ERROR] No pop_interval.log data")
+        sys.exit(1)
 
-    # 그래프 저장
-    fig, axes = plt.subplots(2, 1, figsize=(14, 7), sharex=True)
+    thr_rows = build_ss_throughput(ss_rows)
 
-    axes[0].plot(pop_x, pop_intervals, linewidth=1)
-    axes[0].set_ylabel("POP interval (s)")
-    axes[0].set_title("POP Ping Response Interval")
-    axes[0].grid(True, which="major", alpha=0.3)
-    axes[0].grid(True, which="minor", alpha=0.1)
+    if not thr_rows:
+        print("[ERROR] Could not build throughput from ss_rtt.log")
+        sys.exit(1)
 
-    axes[1].plot(iperf_mid_times, throughput_mbps, linewidth=1)
-    axes[1].set_ylabel("Throughput (Mbps)")
-    axes[1].set_title("iperf Throughput")
-    axes[1].set_xlabel("Time since experiment start (s)")
-    axes[1].grid(True, which="major", alpha=0.3)
-    axes[1].grid(True, which="minor", alpha=0.1)
+    aligned = []
 
-    for ax in axes:
-        ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
-        ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
+    for pop_ts, pop_interval in pop_rows:
+        event_ts = pop_ts - pop_interval
 
-    plt.tight_layout()
+        thr = containing_throughput(thr_rows, event_ts)
+        if thr is None:
+            continue
 
-    out_png = result_dir / f"combined_{exp_name}.png"
+        aligned.append({
+            "pop_ts": pop_ts,
+            "event_ts": event_ts,
+            "pop_interval": pop_interval,
+            "thr_ts": thr["ts"],
+            "throughput_mbps": thr["throughput_mbps"],
+            "rtt_ms": thr["rtt_ms"],
+            "cwnd": thr["cwnd"],
+        })
+
+    if len(aligned) < 2:
+        print("[ERROR] Not enough aligned data")
+        sys.exit(1)
+
+    pop_intervals = np.array([x["pop_interval"] for x in aligned])
+    throughputs = np.array([x["throughput_mbps"] for x in aligned])
+    rtts = np.array([x["rtt_ms"] for x in aligned])
+    cwnds = np.array([x["cwnd"] for x in aligned])
+
+    corr_interval_thr = pearson_corr(pop_intervals, throughputs)
+    corr_interval_rtt = pearson_corr(pop_intervals, rtts)
+    corr_interval_cwnd = pearson_corr(pop_intervals, cwnds)
+
+    t0 = min(aligned[0]["event_ts"], thr_rows[0]["ts"])
+    aligned_times = np.array([x["event_ts"] - t0 for x in aligned])
+    thr_times = np.array([x["ts"] - t0 for x in thr_rows])
+    thr_values = np.array([x["throughput_mbps"] for x in thr_rows])
+
+    result_name = log_dir.name
+
+    out_txt = save_dir / f"{result_name}_ss_correlation_result.txt"
+    out_png = save_dir / f"{result_name}_ss_pop_interval_throughput.png"
+    out_scatter = save_dir / f"{result_name}_ss_pop_interval_throughput_scatter.png"
+
+    with out_txt.open("w") as f:
+        f.write("Correlation analysis using ss_rtt.log bytes_sent\n")
+        f.write("================================================\n\n")
+        f.write(f"log_dir: {log_dir}\n")
+        f.write(f"save_dir: {save_dir}\n\n")
+
+        f.write(f"ss_rtt samples: {len(ss_rows)}\n")
+        f.write(f"ss throughput samples: {len(thr_rows)}\n")
+        f.write(f"pop interval samples: {len(pop_rows)}\n")
+        f.write(f"aligned samples: {len(aligned)}\n\n")
+
+        f.write("[Pearson correlation]\n")
+        f.write(f"pop_interval vs ss_throughput_mbps: {corr_interval_thr}\n")
+        f.write(f"pop_interval vs ss_rtt_ms: {corr_interval_rtt}\n")
+        f.write(f"pop_interval vs ss_cwnd: {corr_interval_cwnd}\n\n")
+
+        f.write("[Aligned data]\n")
+        f.write("event_ts pop_interval throughput_mbps rtt_ms cwnd thr_ts\n")
+        for row in aligned:
+            f.write(
+                f"{row['event_ts']} "
+                f"{row['pop_interval']} "
+                f"{row['throughput_mbps']} "
+                f"{row['rtt_ms']} "
+                f"{row['cwnd']} "
+                f"{row['thr_ts']}\n"
+            )
+
+    fig, ax1 = plt.subplots(figsize=(12, 5))
+
+    ax1.plot(
+        aligned_times,
+        pop_intervals,
+        linewidth=1,
+        label="POP ping response interval"
+    )
+    ax1.set_xlabel("Time since start (s)")
+    ax1.set_ylabel("POP response interval (s)")
+    ax1.grid(True, alpha=0.3)
+
+    ax2 = ax1.twinx()
+    ax2.plot(
+        thr_times,
+        thr_values,
+        linewidth=1,
+        alpha=0.8,
+        label="SS-based throughput"
+    )
+    ax2.set_ylabel("SS throughput (Mbps)")
+
+    plt.title("POP Ping Interval vs SS-based TCP Throughput")
+
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc="upper right")
+
+    fig.tight_layout()
     plt.savefig(out_png, dpi=200)
     plt.close()
 
+    plt.figure(figsize=(6, 5))
+    plt.scatter(pop_intervals, throughputs, s=12)
+    plt.xlabel("POP response interval (s)")
+    plt.ylabel("SS throughput (Mbps)")
+    plt.title("Correlation: POP Interval vs SS Throughput")
+    plt.grid(True, alpha=0.3)
+    plt.tight_layout()
+    plt.savefig(out_scatter, dpi=200)
+    plt.close()
+
+    print(f"[INFO] Saved: {out_txt}")
     print(f"[INFO] Saved: {out_png}")
-
-    # 상관관계 분석
-    bin_size = 1.0
-
-    (
-        aligned_times,
-        aligned_event_times,
-        aligned_pop_max,
-        aligned_thr_containing,
-        aligned_thr_previous,
-        aligned_thr_nearest_midpoint,
-        aligned_containing_ranges,
-        aligned_previous_ranges,
-        aligned_nearest_midpoint_ranges,
-        aligned_nearest_midpoints,
-        aligned_nearest_midpoint_distances,
-    ) = align_pop_max_with_iperf(
-        pop_x,
-        pop_intervals,
-        iperf_rows,
-        bin_size=bin_size
-    )
-
-    # 1. 해당 시점 포함 처리량과의 상관관계
-    corr_containing = pearson_corr(
-        aligned_pop_max,
-        aligned_thr_containing
-    )
-
-    # 2. 이전 처리량과의 상관관계
-    # 첫 번째 iperf interval에는 이전 처리량이 없으므로 None 제거
-    prev_pop = []
-    prev_thr = []
-
-    for pop_v, thr_v in zip(aligned_pop_max, aligned_thr_previous):
-        if thr_v is None:
-            continue
-
-        prev_pop.append(pop_v)
-        prev_thr.append(thr_v)
-
-    corr_previous = pearson_corr(prev_pop, prev_thr)
-
-    # 3. 중앙값 기준 가장 가까운 처리량과의 상관관계
-    nearest_midpoint_pop = []
-    nearest_midpoint_thr = []
-
-    for pop_v, thr_v in zip(aligned_pop_max, aligned_thr_nearest_midpoint):
-        if thr_v is None:
-            continue
-
-        nearest_midpoint_pop.append(pop_v)
-        nearest_midpoint_thr.append(thr_v)
-
-    corr_nearest_midpoint = pearson_corr(
-        nearest_midpoint_pop,
-        nearest_midpoint_thr
-    )
-
-    if corr_containing is not None:
-        print(f"[RESULT] {exp_name} corr_containing = {corr_containing:.4f}")
-    else:
-        print(f"[RESULT] {exp_name} corr_containing = N/A")
-
-    if corr_previous is not None:
-        print(f"[RESULT] {exp_name} corr_previous = {corr_previous:.4f}")
-    else:
-        print(f"[RESULT] {exp_name} corr_previous = N/A")
-
-    if corr_nearest_midpoint is not None:
-        print(f"[RESULT] {exp_name} corr_nearest_midpoint = {corr_nearest_midpoint:.4f}")
-    else:
-        print(f"[RESULT] {exp_name} corr_nearest_midpoint = N/A")
-
-    # 결과 txt 저장
-    result_txt = result_dir / f"correlation_{exp_name}.txt"
-
-    with result_txt.open("w") as f:
-        f.write("Correlation analysis between POP ping interval max and iperf throughput\n")
-        f.write("======================================================================\n")
-        f.write(f"Experiment: {exp_name}\n")
-        f.write(f"Throughput source: {iperf_json}\n")
-        f.write("Throughput unit: Mbps\n")
-        f.write(f"POP interval source: {pop_log}\n")
-        f.write("POP interval unit: seconds\n")
-        f.write(f"Bin size: {bin_size} s\n\n")
-
-        f.write(f"Number of aligned samples for containing throughput: {len(aligned_pop_max)}\n")
-        f.write(f"Number of aligned samples for previous throughput: {len(prev_pop)}\n")
-        f.write(f"Number of aligned samples for nearest midpoint throughput: {len(nearest_midpoint_pop)}\n\n")
-
-        f.write("[1] POP interval max vs containing iperf throughput\n")
-        f.write("---------------------------------------------------\n")
-        f.write("Meaning:\n")
-        f.write("- Throughput of the iperf interval that contains the POP interval max time.\n")
-
-        if corr_containing is not None:
-            f.write(f"Pearson correlation = {corr_containing:.4f}\n\n")
-        else:
-            f.write("Pearson correlation = N/A\n\n")
-
-        f.write("[2] POP interval max vs previous iperf throughput\n")
-        f.write("-------------------------------------------------\n")
-        f.write("Meaning:\n")
-        f.write("- Throughput of the iperf interval immediately before the containing interval.\n")
-
-        if corr_previous is not None:
-            f.write(f"Pearson correlation = {corr_previous:.4f}\n\n")
-        else:
-            f.write("Pearson correlation = N/A\n\n")
-
-        f.write("[3] POP interval max vs nearest-midpoint iperf throughput\n")
-        f.write("---------------------------------------------------------\n")
-        f.write("Meaning:\n")
-        f.write("- Throughput of the iperf interval whose midpoint is closest to the POP interval max time.\n")
-
-        if corr_nearest_midpoint is not None:
-            f.write(f"Pearson correlation = {corr_nearest_midpoint:.4f}\n\n")
-        else:
-            f.write("Pearson correlation = N/A\n\n")
-
-        f.write("Detailed aligned samples\n")
-        f.write("========================\n")
-
-        for (
-            pop_time,
-            pop_event_time,
-            pop_max,
-            thr_containing,
-            thr_previous,
-            thr_nearest_midpoint,
-            containing_range,
-            previous_range,
-            nearest_midpoint_range,
-            nearest_midpoint,
-            nearest_midpoint_distance,
-        ) in zip(
-            aligned_times,
-            aligned_event_times,
-            aligned_pop_max,
-            aligned_thr_containing,
-            aligned_thr_previous,
-            aligned_thr_nearest_midpoint,
-            aligned_containing_ranges,
-            aligned_previous_ranges,
-            aligned_nearest_midpoint_ranges,
-            aligned_nearest_midpoints,
-            aligned_nearest_midpoint_distances,
-        ):
-            containing_start, containing_end = containing_range
-            previous_start, previous_end = previous_range
-            nearest_midpoint_start, nearest_midpoint_end = nearest_midpoint_range
-
-            f.write(
-                f"{pop_time},"
-                f"{pop_event_time},"
-                f"{pop_max},"
-                f"{thr_containing},"
-                f"{containing_start},"
-                f"{containing_end},"
-                f"{thr_previous},"
-                f"{previous_start},"
-                f"{previous_end},"
-                f"{thr_nearest_midpoint},"
-                f"{nearest_midpoint_start},"
-                f"{nearest_midpoint_end},"
-                f"{nearest_midpoint},"
-                f"{nearest_midpoint_distance}\n"
-            )
-
-    print(f"[INFO] Saved: {result_txt}")
+    print(f"[INFO] Saved: {out_scatter}")
+    print(f"[INFO] pop_interval vs ss_throughput_mbps correlation = {corr_interval_thr}")
 
 
 if __name__ == "__main__":
