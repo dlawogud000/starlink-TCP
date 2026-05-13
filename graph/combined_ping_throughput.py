@@ -140,6 +140,38 @@ def find_containing_and_previous_iperf_throughput(t, iperf_rows):
     return None, None, None, None, None, None
 
 
+def find_nearest_midpoint_iperf_throughput(t, iperf_rows):
+    """
+    t와 가장 가까운 중앙 시각(midpoint)을 가진 iperf interval의 throughput을 찾는다.
+
+    각 iperf interval에 대해:
+    midpoint = (start + end) / 2
+
+    POP max 발생 시각 t와 midpoint의 거리가 가장 작은 interval을 선택한다.
+
+    반환:
+    nearest_thr, nearest_start, nearest_end, nearest_mid, nearest_distance
+    """
+    best_thr = None
+    best_start = None
+    best_end = None
+    best_mid = None
+    best_distance = None
+
+    for start, end, mbps in iperf_rows:
+        mid = (start + end) / 2.0
+        distance = abs(t - mid)
+
+        if best_distance is None or distance < best_distance:
+            best_distance = distance
+            best_thr = mbps
+            best_start = start
+            best_end = end
+            best_mid = mid
+
+    return best_thr, best_start, best_end, best_mid, best_distance
+
+
 def align_pop_max_with_iperf(
     pop_times,
     pop_values,
@@ -155,13 +187,16 @@ def align_pop_max_with_iperf(
 
     을 찾는다.
 
-    throughput은 두 가지 기준으로 정렬한다.
+    throughput은 세 가지 기준으로 정렬한다.
 
     1. containing throughput
        - POP max 발생 시각을 포함하는 iperf interval의 throughput
 
     2. previous throughput
        - POP max 발생 시각을 포함하는 iperf interval의 직전 throughput
+
+    3. nearest midpoint throughput
+       - POP max 발생 시각과 가장 가까운 중앙 시각을 가진 iperf interval의 throughput
     """
     pop_bins = {}
 
@@ -174,9 +209,13 @@ def align_pop_max_with_iperf(
 
     aligned_thr_containing = []
     aligned_thr_previous = []
+    aligned_thr_nearest_midpoint = []
 
     aligned_containing_ranges = []
     aligned_previous_ranges = []
+    aligned_nearest_midpoint_ranges = []
+    aligned_nearest_midpoints = []
+    aligned_nearest_midpoint_distances = []
 
     for b, vals in sorted(pop_bins.items()):
         if not vals:
@@ -200,22 +239,43 @@ def align_pop_max_with_iperf(
         if thr_containing is None:
             continue
 
+        (
+            thr_nearest_midpoint,
+            nearest_midpoint_start,
+            nearest_midpoint_end,
+            nearest_midpoint,
+            nearest_midpoint_distance,
+        ) = find_nearest_midpoint_iperf_throughput(
+            pop_max_time,
+            iperf_rows
+        )
+
         aligned_times.append(pop_max_time)
         aligned_pop_max.append(pop_max_value)
 
         aligned_thr_containing.append(thr_containing)
         aligned_thr_previous.append(thr_previous)
+        aligned_thr_nearest_midpoint.append(thr_nearest_midpoint)
 
         aligned_containing_ranges.append((containing_start, containing_end))
         aligned_previous_ranges.append((previous_start, previous_end))
+        aligned_nearest_midpoint_ranges.append(
+            (nearest_midpoint_start, nearest_midpoint_end)
+        )
+        aligned_nearest_midpoints.append(nearest_midpoint)
+        aligned_nearest_midpoint_distances.append(nearest_midpoint_distance)
 
     return (
         aligned_times,
         aligned_pop_max,
         aligned_thr_containing,
         aligned_thr_previous,
+        aligned_thr_nearest_midpoint,
         aligned_containing_ranges,
         aligned_previous_ranges,
+        aligned_nearest_midpoint_ranges,
+        aligned_nearest_midpoints,
+        aligned_nearest_midpoint_distances,
     )
 
 
@@ -295,8 +355,12 @@ def main():
         aligned_pop_max,
         aligned_thr_containing,
         aligned_thr_previous,
+        aligned_thr_nearest_midpoint,
         aligned_containing_ranges,
         aligned_previous_ranges,
+        aligned_nearest_midpoint_ranges,
+        aligned_nearest_midpoints,
+        aligned_nearest_midpoint_distances,
     ) = align_pop_max_with_iperf(
         pop_x,
         pop_intervals,
@@ -314,24 +378,31 @@ def main():
     # 첫 번째 iperf interval에는 이전 처리량이 없으므로 None 제거
     prev_pop = []
     prev_thr = []
-    prev_times = []
-    prev_ranges = []
 
-    for pop_time, pop_v, thr_v, rng in zip(
-        aligned_times,
-        aligned_pop_max,
-        aligned_thr_previous,
-        aligned_previous_ranges
-    ):
+    for pop_v, thr_v in zip(aligned_pop_max, aligned_thr_previous):
         if thr_v is None:
             continue
 
-        prev_times.append(pop_time)
         prev_pop.append(pop_v)
         prev_thr.append(thr_v)
-        prev_ranges.append(rng)
 
     corr_previous = pearson_corr(prev_pop, prev_thr)
+
+    # 3. 중앙값 기준 가장 가까운 처리량과의 상관관계
+    nearest_midpoint_pop = []
+    nearest_midpoint_thr = []
+
+    for pop_v, thr_v in zip(aligned_pop_max, aligned_thr_nearest_midpoint):
+        if thr_v is None:
+            continue
+
+        nearest_midpoint_pop.append(pop_v)
+        nearest_midpoint_thr.append(thr_v)
+
+    corr_nearest_midpoint = pearson_corr(
+        nearest_midpoint_pop,
+        nearest_midpoint_thr
+    )
 
     if corr_containing is not None:
         print(f"[RESULT] {exp_name} corr_containing = {corr_containing:.4f}")
@@ -342,6 +413,11 @@ def main():
         print(f"[RESULT] {exp_name} corr_previous = {corr_previous:.4f}")
     else:
         print(f"[RESULT] {exp_name} corr_previous = N/A")
+
+    if corr_nearest_midpoint is not None:
+        print(f"[RESULT] {exp_name} corr_nearest_midpoint = {corr_nearest_midpoint:.4f}")
+    else:
+        print(f"[RESULT] {exp_name} corr_nearest_midpoint = N/A")
 
     # 결과 txt 저장
     result_txt = result_dir / f"correlation_{exp_name}.txt"
@@ -357,7 +433,8 @@ def main():
         f.write(f"Bin size: {bin_size} s\n\n")
 
         f.write(f"Number of aligned samples for containing throughput: {len(aligned_pop_max)}\n")
-        f.write(f"Number of aligned samples for previous throughput: {len(prev_pop)}\n\n")
+        f.write(f"Number of aligned samples for previous throughput: {len(prev_pop)}\n")
+        f.write(f"Number of aligned samples for nearest midpoint throughput: {len(nearest_midpoint_pop)}\n\n")
 
         f.write("[1] POP interval max vs containing iperf throughput\n")
         f.write("---------------------------------------------------\n")
@@ -379,6 +456,16 @@ def main():
         else:
             f.write("Pearson correlation = N/A\n\n")
 
+        f.write("[3] POP interval max vs nearest-midpoint iperf throughput\n")
+        f.write("---------------------------------------------------------\n")
+        f.write("Meaning:\n")
+        f.write("- Throughput of the iperf interval whose midpoint is closest to the POP interval max time.\n")
+
+        if corr_nearest_midpoint is not None:
+            f.write(f"Pearson correlation = {corr_nearest_midpoint:.4f}\n\n")
+        else:
+            f.write("Pearson correlation = N/A\n\n")
+
         f.write("Detailed aligned samples\n")
         f.write("========================\n")
         f.write(
@@ -389,7 +476,12 @@ def main():
             "containing_end_s,"
             "previous_thr_mbps,"
             "previous_start_s,"
-            "previous_end_s\n"
+            "previous_end_s,"
+            "nearest_midpoint_thr_mbps,"
+            "nearest_midpoint_start_s,"
+            "nearest_midpoint_end_s,"
+            "nearest_midpoint_s,"
+            "nearest_midpoint_distance_s\n"
         )
 
         for (
@@ -397,18 +489,27 @@ def main():
             pop_max,
             thr_containing,
             thr_previous,
+            thr_nearest_midpoint,
             containing_range,
             previous_range,
+            nearest_midpoint_range,
+            nearest_midpoint,
+            nearest_midpoint_distance,
         ) in zip(
             aligned_times,
             aligned_pop_max,
             aligned_thr_containing,
             aligned_thr_previous,
+            aligned_thr_nearest_midpoint,
             aligned_containing_ranges,
             aligned_previous_ranges,
+            aligned_nearest_midpoint_ranges,
+            aligned_nearest_midpoints,
+            aligned_nearest_midpoint_distances,
         ):
             containing_start, containing_end = containing_range
             previous_start, previous_end = previous_range
+            nearest_midpoint_start, nearest_midpoint_end = nearest_midpoint_range
 
             f.write(
                 f"{pop_time},"
@@ -418,7 +519,12 @@ def main():
                 f"{containing_end},"
                 f"{thr_previous},"
                 f"{previous_start},"
-                f"{previous_end}\n"
+                f"{previous_end},"
+                f"{thr_nearest_midpoint},"
+                f"{nearest_midpoint_start},"
+                f"{nearest_midpoint_end},"
+                f"{nearest_midpoint},"
+                f"{nearest_midpoint_distance}\n"
             )
 
     print(f"[INFO] Saved: {result_txt}")
