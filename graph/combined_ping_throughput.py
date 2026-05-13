@@ -100,37 +100,68 @@ def pearson_corr(x, y):
     return num / ((den_x ** 0.5) * (den_y ** 0.5))
 
 
-def find_containing_iperf_throughput(t, iperf_rows):
+def find_containing_and_previous_iperf_throughput(t, iperf_rows):
     """
-    t를 포함하는 iperf interval의 throughput을 찾는다.
+    t를 포함하는 iperf interval의 throughput과
+    그 직전 iperf interval의 throughput을 함께 찾는다.
 
     예:
     t = 5.8
-    iperf interval = 5.0~6.0
-    선택됨.
+    containing interval = 5.0 ~ 6.0
+    previous interval   = 4.0 ~ 5.0
+
+    반환:
+    containing_thr, previous_thr,
+    containing_start, containing_end,
+    previous_start, previous_end
     """
-    for start, end, mbps in iperf_rows:
+    for i, (start, end, mbps) in enumerate(iperf_rows):
         if start <= t < end:
-            return mbps, start, end
+            containing_thr = mbps
+            containing_start = start
+            containing_end = end
 
-    return None, None, None
+            if i > 0:
+                previous_start, previous_end, previous_thr = iperf_rows[i - 1]
+            else:
+                previous_thr = None
+                previous_start = None
+                previous_end = None
+
+            return (
+                containing_thr,
+                previous_thr,
+                containing_start,
+                containing_end,
+                previous_start,
+                previous_end,
+            )
+
+    return None, None, None, None, None, None
 
 
-def align_pop_max_with_containing_iperf(
+def align_pop_max_with_iperf(
     pop_times,
     pop_values,
     iperf_rows,
     bin_size=1.0
 ):
     """
-    POP interval을 1초 bin 단위로 묶는다.
+    POP interval을 bin 단위로 묶는다.
 
     각 bin에서:
     1. POP interval max 값
     2. 그 max가 발생한 시간
+
     을 찾는다.
 
-    throughput은 POP max 발생 시각을 포함하는 iperf interval의 값을 사용한다.
+    throughput은 두 가지 기준으로 정렬한다.
+
+    1. containing throughput
+       - POP max 발생 시각을 포함하는 iperf interval의 throughput
+
+    2. previous throughput
+       - POP max 발생 시각을 포함하는 iperf interval의 직전 throughput
     """
     pop_bins = {}
 
@@ -140,31 +171,52 @@ def align_pop_max_with_containing_iperf(
 
     aligned_times = []
     aligned_pop_max = []
-    aligned_thr = []
-    aligned_iperf_ranges = []
+
+    aligned_thr_containing = []
+    aligned_thr_previous = []
+
+    aligned_containing_ranges = []
+    aligned_previous_ranges = []
 
     for b, vals in sorted(pop_bins.items()):
         if not vals:
             continue
 
-        # 해당 1초 bin 안에서 interval이 가장 큰 순간
+        # 해당 bin 안에서 POP interval이 가장 큰 순간
         pop_max_time, pop_max_value = max(vals, key=lambda x: x[1])
 
-        # POP max 시각을 포함하는 iperf interval
-        thr, start, end = find_containing_iperf_throughput(
+        (
+            thr_containing,
+            thr_previous,
+            containing_start,
+            containing_end,
+            previous_start,
+            previous_end,
+        ) = find_containing_and_previous_iperf_throughput(
             pop_max_time,
             iperf_rows
         )
 
-        if thr is None:
+        if thr_containing is None:
             continue
 
         aligned_times.append(pop_max_time)
         aligned_pop_max.append(pop_max_value)
-        aligned_thr.append(thr)
-        aligned_iperf_ranges.append((start, end))
 
-    return aligned_times, aligned_pop_max, aligned_thr, aligned_iperf_ranges
+        aligned_thr_containing.append(thr_containing)
+        aligned_thr_previous.append(thr_previous)
+
+        aligned_containing_ranges.append((containing_start, containing_end))
+        aligned_previous_ranges.append((previous_start, previous_end))
+
+    return (
+        aligned_times,
+        aligned_pop_max,
+        aligned_thr_containing,
+        aligned_thr_previous,
+        aligned_containing_ranges,
+        aligned_previous_ranges,
+    )
 
 
 def main():
@@ -201,6 +253,7 @@ def main():
         (start + end) / 2.0
         for start, end, _ in iperf_rows
     ]
+
     throughput_mbps = [
         mbps
         for _, _, mbps in iperf_rows
@@ -237,44 +290,135 @@ def main():
     # 상관관계 분석
     bin_size = 1.0
 
-    aligned_times, aligned_pop_max, aligned_thr, aligned_iperf_ranges = (
-        align_pop_max_with_containing_iperf(
-            pop_x,
-            pop_intervals,
-            iperf_rows,
-            bin_size=bin_size
-        )
+    (
+        aligned_times,
+        aligned_pop_max,
+        aligned_thr_containing,
+        aligned_thr_previous,
+        aligned_containing_ranges,
+        aligned_previous_ranges,
+    ) = align_pop_max_with_iperf(
+        pop_x,
+        pop_intervals,
+        iperf_rows,
+        bin_size=bin_size
     )
 
-    corr_containing = pearson_corr(aligned_pop_max, aligned_thr)
+    # 1. 해당 시점 포함 처리량과의 상관관계
+    corr_containing = pearson_corr(
+        aligned_pop_max,
+        aligned_thr_containing
+    )
+
+    # 2. 이전 처리량과의 상관관계
+    # 첫 번째 iperf interval에는 이전 처리량이 없으므로 None 제거
+    prev_pop = []
+    prev_thr = []
+    prev_times = []
+    prev_ranges = []
+
+    for pop_time, pop_v, thr_v, rng in zip(
+        aligned_times,
+        aligned_pop_max,
+        aligned_thr_previous,
+        aligned_previous_ranges
+    ):
+        if thr_v is None:
+            continue
+
+        prev_times.append(pop_time)
+        prev_pop.append(pop_v)
+        prev_thr.append(thr_v)
+        prev_ranges.append(rng)
+
+    corr_previous = pearson_corr(prev_pop, prev_thr)
 
     if corr_containing is not None:
         print(f"[RESULT] {exp_name} corr_containing = {corr_containing:.4f}")
     else:
         print(f"[RESULT] {exp_name} corr_containing = N/A")
 
+    if corr_previous is not None:
+        print(f"[RESULT] {exp_name} corr_previous = {corr_previous:.4f}")
+    else:
+        print(f"[RESULT] {exp_name} corr_previous = N/A")
+
+    # 결과 txt 저장
     result_txt = result_dir / f"correlation_{exp_name}.txt"
 
     with result_txt.open("w") as f:
-        f.write("Correlation analysis between POP ping interval max and containing iperf throughput\n")
-        f.write("=================================================================================\n")
+        f.write("Correlation analysis between POP ping interval max and iperf throughput\n")
+        f.write("======================================================================\n")
         f.write(f"Experiment: {exp_name}\n")
         f.write(f"Throughput source: {iperf_json}\n")
         f.write("Throughput unit: Mbps\n")
         f.write(f"POP interval source: {pop_log}\n")
         f.write("POP interval unit: seconds\n")
-        f.write(f"Bin size: {bin_size} s\n")
-        f.write(f"Number of aligned samples: {len(aligned_pop_max)}\n\n")
+        f.write(f"Bin size: {bin_size} s\n\n")
+
+        f.write(f"Number of aligned samples for containing throughput: {len(aligned_pop_max)}\n")
+        f.write(f"Number of aligned samples for previous throughput: {len(prev_pop)}\n\n")
+
+        f.write("[1] POP interval max vs containing iperf throughput\n")
+        f.write("---------------------------------------------------\n")
+        f.write("Meaning:\n")
+        f.write("- Throughput of the iperf interval that contains the POP interval max time.\n")
 
         if corr_containing is not None:
-            f.write(
-                "Pearson correlation: "
-                f"POP interval max vs containing iperf throughput = {corr_containing:.4f}\n"
-            )
+            f.write(f"Pearson correlation = {corr_containing:.4f}\n\n")
         else:
+            f.write("Pearson correlation = N/A\n\n")
+
+        f.write("[2] POP interval max vs previous iperf throughput\n")
+        f.write("-------------------------------------------------\n")
+        f.write("Meaning:\n")
+        f.write("- Throughput of the iperf interval immediately before the containing interval.\n")
+
+        if corr_previous is not None:
+            f.write(f"Pearson correlation = {corr_previous:.4f}\n\n")
+        else:
+            f.write("Pearson correlation = N/A\n\n")
+
+        f.write("Detailed aligned samples\n")
+        f.write("========================\n")
+        f.write(
+            "pop_max_time_s,"
+            "pop_interval_max_s,"
+            "containing_thr_mbps,"
+            "containing_start_s,"
+            "containing_end_s,"
+            "previous_thr_mbps,"
+            "previous_start_s,"
+            "previous_end_s\n"
+        )
+
+        for (
+            pop_time,
+            pop_max,
+            thr_containing,
+            thr_previous,
+            containing_range,
+            previous_range,
+        ) in zip(
+            aligned_times,
+            aligned_pop_max,
+            aligned_thr_containing,
+            aligned_thr_previous,
+            aligned_containing_ranges,
+            aligned_previous_ranges,
+        ):
+            containing_start, containing_end = containing_range
+            previous_start, previous_end = previous_range
+
             f.write(
-                "Pearson correlation: "
-                "POP interval max vs containing iperf throughput = N/A\n"
+                f"{pop_time},"
+                f"{pop_max},"
+                f"{thr_containing},"
+                f"{containing_start},"
+                f"{containing_end},"
+                f"{thr_previous},"
+                f"{previous_start},"
+                f"{previous_end}\n"
             )
 
     print(f"[INFO] Saved: {result_txt}")
