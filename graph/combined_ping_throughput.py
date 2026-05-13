@@ -36,9 +36,6 @@ def load_iperf_throughput(path: Path):
     iperf.json에서 interval별 throughput을 읽음.
     throughput 단위는 Mbps로 변환.
 
-    iperf.json 내부 값:
-    bits_per_second → bps
-
     반환:
     times: iperf 시작 후 시간, 초 단위
     mbps: throughput, Mbps 단위
@@ -65,7 +62,7 @@ def load_iperf_throughput(path: Path):
         if start is None or end is None or bps is None:
             continue
 
-        # 해당 interval의 중앙 시간을 사용
+        # iperf interval의 중앙 시간을 사용
         t = (float(start) + float(end)) / 2.0
         rate_mbps = float(bps) / 1_000_000
 
@@ -79,30 +76,18 @@ def normalize(ts, t0):
     return [x - t0 for x in ts]
 
 
-def percentile(values, p):
-    if not values:
-        return None
-
-    values = sorted(values)
-    k = (len(values) - 1) * (p / 100)
-    f = int(k)
-    c = min(f + 1, len(values) - 1)
-
-    if f == c:
-        return values[f]
-
-    return values[f] + (values[c] - values[f]) * (k - f)
-
-
-def align_by_iperf_bins(pop_times, pop_values, thr_times, thr_values, bin_size=1.0):
+def align_pop_max_with_nearest_iperf(
+    pop_times,
+    pop_values,
+    thr_times,
+    thr_values,
+    bin_size=1.0
+):
     """
-    iperf throughput의 시간 단위에 맞춰 pop_interval을 집계함.
+    POP interval은 1초 bin 단위로 묶고, 각 bin에서 max interval만 사용한다.
 
-    pop_interval은 0.01초 수준으로 촘촘하고,
-    iperf throughput은 보통 1초 단위이므로
-    같은 1초 bin 안에서 비교한다.
-
-    pop_interval은 평균, 최대, p95를 모두 계산한다.
+    throughput은 해당 bin 중앙 시각에 가장 가까운 iperf 샘플 1개만 가져온다.
+    즉, throughput을 평균내지 않고 가장 가까운 값 하나와 비교한다.
     """
     pop_bins = {}
 
@@ -111,28 +96,29 @@ def align_by_iperf_bins(pop_times, pop_values, thr_times, thr_values, bin_size=1
         pop_bins.setdefault(b, []).append(v)
 
     aligned_times = []
-    aligned_pop_avg = []
     aligned_pop_max = []
-    aligned_pop_p95 = []
     aligned_thr = []
 
-    for t, thr in zip(thr_times, thr_values):
-        b = int(t / bin_size)
+    if not thr_times:
+        return aligned_times, aligned_pop_max, aligned_thr
 
-        if b not in pop_bins:
-            continue
-
-        vals = pop_bins[b]
+    for b, vals in sorted(pop_bins.items()):
         if not vals:
             continue
 
-        aligned_times.append(b * bin_size)
-        aligned_pop_avg.append(sum(vals) / len(vals))
-        aligned_pop_max.append(max(vals))
-        aligned_pop_p95.append(percentile(vals, 95))
-        aligned_thr.append(thr)
+        # 예: 0~1초 bin이면 0.5초의 iperf throughput과 매칭
+        target_t = b * bin_size + bin_size / 2.0
 
-    return aligned_times, aligned_pop_avg, aligned_pop_max, aligned_pop_p95, aligned_thr
+        nearest_idx = min(
+            range(len(thr_times)),
+            key=lambda i: abs(thr_times[i] - target_t)
+        )
+
+        aligned_times.append(target_t)
+        aligned_pop_max.append(max(vals))
+        aligned_thr.append(thr_values[nearest_idx])
+
+    return aligned_times, aligned_pop_max, aligned_thr
 
 
 def pearson_corr(x, y):
@@ -161,14 +147,18 @@ def pearson_corr(x, y):
 
 
 def main():
-    if len(sys.argv) != 2:
-        print(f"Usage: {sys.argv[0]} <OUT_DIR>")
+    if len(sys.argv) != 3:
+        print(f"Usage: {sys.argv[0]} <EXP_DIR> <RESULT_DIR>")
         sys.exit(1)
 
-    out_dir = Path(sys.argv[1])
+    exp_dir = Path(sys.argv[1])
+    result_dir = Path(sys.argv[2])
+    result_dir.mkdir(parents=True, exist_ok=True)
 
-    pop_log = out_dir / "pop_interval.log"
-    iperf_json = out_dir / "iperf.json"
+    exp_name = exp_dir.name
+
+    pop_log = exp_dir / "pop_interval.log"
+    iperf_json = exp_dir / "iperf.json"
 
     pop_ts, pop_intervals = load_pop_interval(pop_log)
     iperf_times, throughput_mbps = load_iperf_throughput(iperf_json)
@@ -209,7 +199,7 @@ def main():
 
     plt.tight_layout()
 
-    out_png = out_dir / "combined_pop_interval_iperf_throughput.png"
+    out_png = result_dir / f"combined_{exp_name}.png"
     plt.savefig(out_png, dpi=200)
     plt.close()
 
@@ -218,7 +208,7 @@ def main():
     # 상관관계 분석
     bin_size = 1.0
 
-    aligned_times, aligned_pop_avg, aligned_pop_max, aligned_pop_p95, aligned_thr = align_by_iperf_bins(
+    aligned_times, aligned_pop_max, aligned_thr = align_pop_max_with_nearest_iperf(
         pop_x,
         pop_intervals,
         thr_x,
@@ -226,35 +216,33 @@ def main():
         bin_size=bin_size
     )
 
-    corr_avg = pearson_corr(aligned_pop_avg, aligned_thr)
     corr_max = pearson_corr(aligned_pop_max, aligned_thr)
-    corr_p95 = pearson_corr(aligned_pop_p95, aligned_thr)
 
-    result_txt = out_dir / "correlation_pop_interval_iperf_throughput.txt"
+    result_txt = result_dir / f"correlation_{exp_name}.txt"
 
     with result_txt.open("w") as f:
-        f.write("Correlation analysis between POP ping interval and iperf throughput\n")
-        f.write("====================================================================\n")
-        f.write(f"Throughput source: iperf.json\n")
-        f.write(f"Throughput unit: Mbps\n")
-        f.write(f"POP interval unit: seconds\n")
+        f.write("Correlation analysis between POP ping interval max and nearest iperf throughput\n")
+        f.write("===========================================================================\n")
+        f.write(f"Experiment: {exp_name}\n")
+        f.write(f"Throughput source: {iperf_json}\n")
+        f.write("Throughput unit: Mbps\n")
+        f.write(f"POP interval source: {pop_log}\n")
+        f.write("POP interval unit: seconds\n")
         f.write(f"Bin size: {bin_size} s\n")
+        f.write("POP interval value: max value within each bin\n")
+        f.write("Throughput matching: nearest iperf sample to each bin center time\n")
         f.write(f"Number of aligned samples: {len(aligned_times)}\n\n")
 
-        if corr_avg is not None:
-            f.write(f"Pearson correlation: POP interval avg vs iperf throughput = {corr_avg:.4f}\n")
-        else:
-            f.write("Pearson correlation: POP interval avg vs iperf throughput = N/A\n")
-
         if corr_max is not None:
-            f.write(f"Pearson correlation: POP interval max vs iperf throughput = {corr_max:.4f}\n")
+            f.write(
+                "Pearson correlation: "
+                f"POP interval max vs nearest iperf throughput = {corr_max:.4f}\n"
+            )
         else:
-            f.write("Pearson correlation: POP interval max vs iperf throughput = N/A\n")
-
-        if corr_p95 is not None:
-            f.write(f"Pearson correlation: POP interval p95 vs iperf throughput = {corr_p95:.4f}\n")
-        else:
-            f.write("Pearson correlation: POP interval p95 vs iperf throughput = N/A\n")
+            f.write(
+                "Pearson correlation: "
+                "POP interval max vs nearest iperf throughput = N/A\n"
+            )
 
     print(f"[INFO] Saved: {result_txt}")
 
