@@ -62,8 +62,7 @@ def load_iperf_throughput(path: Path):
         if start is None or end is None or bps is None:
             continue
 
-        # iperf interval의 중앙 시간을 사용
-        t = (float(start) + float(end)) / 2.0
+        t = end
         rate_mbps = float(bps) / 1_000_000
 
         times.append(t)
