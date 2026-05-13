@@ -183,20 +183,13 @@ def align_pop_max_with_iperf(
 
     각 bin에서:
     1. POP interval max 값
-    2. 그 max가 발생한 시간
+    2. 그 max가 관측된 시간
+    3. POP interval 시작 시간 = 관측 시간 - interval 값
 
     을 찾는다.
 
-    throughput은 세 가지 기준으로 정렬한다.
-
-    1. containing throughput
-       - POP max 발생 시각을 포함하는 iperf interval의 throughput
-
-    2. previous throughput
-       - POP max 발생 시각을 포함하는 iperf interval의 직전 throughput
-
-    3. nearest midpoint throughput
-       - POP max 발생 시각과 가장 가까운 중앙 시각을 가진 iperf interval의 throughput
+    throughput 매칭 기준 시간은 pop_max_time이 아니라
+    pop_event_time = pop_max_time - pop_max_value 를 사용한다.
     """
     pop_bins = {}
 
@@ -205,6 +198,7 @@ def align_pop_max_with_iperf(
         pop_bins.setdefault(b, []).append((t, v))
 
     aligned_times = []
+    aligned_event_times = []
     aligned_pop_max = []
 
     aligned_thr_containing = []
@@ -222,7 +216,11 @@ def align_pop_max_with_iperf(
             continue
 
         # 해당 bin 안에서 POP interval이 가장 큰 순간
+        # pop_max_time은 ping 응답이 도착한 시각
         pop_max_time, pop_max_value = max(vals, key=lambda x: x[1])
+
+        # 실제 interval이 시작된 시각을 이벤트 시각으로 사용
+        pop_event_time = pop_max_time - pop_max_value
 
         (
             thr_containing,
@@ -232,7 +230,7 @@ def align_pop_max_with_iperf(
             previous_start,
             previous_end,
         ) = find_containing_and_previous_iperf_throughput(
-            pop_max_time,
+            pop_event_time,
             iperf_rows
         )
 
@@ -246,11 +244,12 @@ def align_pop_max_with_iperf(
             nearest_midpoint,
             nearest_midpoint_distance,
         ) = find_nearest_midpoint_iperf_throughput(
-            pop_max_time,
+            pop_event_time,
             iperf_rows
         )
 
         aligned_times.append(pop_max_time)
+        aligned_event_times.append(pop_event_time)
         aligned_pop_max.append(pop_max_value)
 
         aligned_thr_containing.append(thr_containing)
@@ -267,6 +266,7 @@ def align_pop_max_with_iperf(
 
     return (
         aligned_times,
+        aligned_event_times,
         aligned_pop_max,
         aligned_thr_containing,
         aligned_thr_previous,
@@ -352,6 +352,7 @@ def main():
 
     (
         aligned_times,
+        aligned_event_times,
         aligned_pop_max,
         aligned_thr_containing,
         aligned_thr_previous,
@@ -468,24 +469,10 @@ def main():
 
         f.write("Detailed aligned samples\n")
         f.write("========================\n")
-        f.write(
-            "pop_max_time_s,"
-            "pop_interval_max_s,"
-            "containing_thr_mbps,"
-            "containing_start_s,"
-            "containing_end_s,"
-            "previous_thr_mbps,"
-            "previous_start_s,"
-            "previous_end_s,"
-            "nearest_midpoint_thr_mbps,"
-            "nearest_midpoint_start_s,"
-            "nearest_midpoint_end_s,"
-            "nearest_midpoint_s,"
-            "nearest_midpoint_distance_s\n"
-        )
 
         for (
             pop_time,
+            pop_event_time,
             pop_max,
             thr_containing,
             thr_previous,
@@ -497,6 +484,7 @@ def main():
             nearest_midpoint_distance,
         ) in zip(
             aligned_times,
+            aligned_event_times,
             aligned_pop_max,
             aligned_thr_containing,
             aligned_thr_previous,
@@ -513,6 +501,7 @@ def main():
 
             f.write(
                 f"{pop_time},"
+                f"{pop_event_time},"
                 f"{pop_max},"
                 f"{thr_containing},"
                 f"{containing_start},"
