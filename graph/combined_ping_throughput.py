@@ -76,7 +76,7 @@ def normalize(ts, t0):
     return [x - t0 for x in ts]
 
 
-def align_pop_max_with_nearest_iperf(
+def align_pop_max_time_with_nearest_iperf(
     pop_times,
     pop_values,
     thr_times,
@@ -84,16 +84,18 @@ def align_pop_max_with_nearest_iperf(
     bin_size=1.0
 ):
     """
-    POP interval은 1초 bin 단위로 묶고, 각 bin에서 max interval만 사용한다.
+    POP interval을 1초 bin 단위로 묶는다.
 
-    throughput은 해당 bin 중앙 시각에 가장 가까운 iperf 샘플 1개만 가져온다.
-    즉, throughput을 평균내지 않고 가장 가까운 값 하나와 비교한다.
+    각 bin 안에서 POP interval max 값을 찾고,
+    그 max 값이 발생한 실제 시간 pop_max_time을 구한다.
+
+    throughput은 pop_max_time과 가장 가까운 iperf throughput 샘플 1개를 사용한다.
     """
     pop_bins = {}
 
     for t, v in zip(pop_times, pop_values):
         b = int(t / bin_size)
-        pop_bins.setdefault(b, []).append(v)
+        pop_bins.setdefault(b, []).append((t, v))
 
     aligned_times = []
     aligned_pop_max = []
@@ -106,16 +108,17 @@ def align_pop_max_with_nearest_iperf(
         if not vals:
             continue
 
-        # 예: 0~1초 bin이면 0.5초의 iperf throughput과 매칭
-        target_t = b * bin_size + bin_size / 2.0
+        # 해당 bin 안에서 POP interval max가 발생한 실제 시간과 값 찾기
+        pop_max_time, pop_max_value = max(vals, key=lambda x: x[1])
 
+        # POP interval max 발생 시각과 가장 가까운 iperf throughput 찾기
         nearest_idx = min(
             range(len(thr_times)),
-            key=lambda i: abs(thr_times[i] - target_t)
+            key=lambda i: abs(thr_times[i] - pop_max_time)
         )
 
-        aligned_times.append(target_t)
-        aligned_pop_max.append(max(vals))
+        aligned_times.append(pop_max_time)
+        aligned_pop_max.append(pop_max_value)
         aligned_thr.append(thr_values[nearest_idx])
 
     return aligned_times, aligned_pop_max, aligned_thr
@@ -208,7 +211,7 @@ def main():
     # 상관관계 분석
     bin_size = 1.0
 
-    aligned_times, aligned_pop_max, aligned_thr = align_pop_max_with_nearest_iperf(
+    aligned_times, aligned_pop_max, aligned_thr = align_pop_max_time_with_nearest_iperf(
         pop_x,
         pop_intervals,
         thr_x,
@@ -217,7 +220,11 @@ def main():
     )
 
     corr_max = pearson_corr(aligned_pop_max, aligned_thr)
-
+    if corr_max is not None:
+        print(f"[RESULT] {exp_name} corr_max = {corr_max:.4f}")
+    else:
+        print(f"[RESULT] {exp_name} corr_max = N/A")
+        
     result_txt = result_dir / f"correlation_{exp_name}.txt"
 
     with result_txt.open("w") as f:
@@ -229,8 +236,7 @@ def main():
         f.write(f"POP interval source: {pop_log}\n")
         f.write("POP interval unit: seconds\n")
         f.write(f"Bin size: {bin_size} s\n")
-        f.write("POP interval value: max value within each bin\n")
-        f.write("Throughput matching: nearest iperf sample to each bin center time\n")
+        f.write("Throughput matching: nearest iperf sample to POP interval max time in each bin\n")
         f.write(f"Number of aligned samples: {len(aligned_times)}\n\n")
 
         if corr_max is not None:
