@@ -4,11 +4,11 @@ set -euo pipefail
 usage() {
   cat <<EOF
 Usage:
-  $0 --cc <cubic|bbr> --direction <uplink|downlink> --run-id <id> [--duration <sec>]
+  $0 --cc <cubic|bbr> --direction <uplink|downlink> --run-id <id> [--parallel <n>] [--duration <sec>] [--rwnd <size>]
 
 Example:
-  $0 --cc cubic --direction downlink --run-id test01 --duration 300
-  $0 --cc bbr   --direction downlink --run-id kernel_rwnd_4k --duration 180
+  $0 --cc cubic --direction downlink --run-id test01 --parallel 10 --duration 300
+  $0 --cc bbr   --direction downlink --run-id test02 --parallel 1  --duration 180 --rwnd 64K
 EOF
 }
 
@@ -19,8 +19,9 @@ source "$BASE_DIR/config/experiment.conf"
 CC="bbr"
 DIRECTION=""
 RUN_ID=""
-DURATION_ARG="${DURATION:-300}"
 PARALLEL="1"
+DURATION_ARG="${DURATION:-300}"
+RWND=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -36,8 +37,16 @@ while [[ $# -gt 0 ]]; do
       RUN_ID="$2"
       shift 2
       ;;
+    --parallel)
+      PARALLEL="$2"
+      shift 2
+      ;;
     --duration)
       DURATION_ARG="$2"
+      shift 2
+      ;;
+    --rwnd)
+      RWND="$2"
       shift 2
       ;;
     -h|--help)
@@ -68,9 +77,21 @@ if [[ "$DIRECTION" != "uplink" && "$DIRECTION" != "downlink" ]]; then
   exit 1
 fi
 
+if ! [[ "$PARALLEL" =~ ^[0-9]+$ ]] || [[ "$PARALLEL" -lt 1 ]]; then
+  echo "[ERROR] --parallel must be a positive integer"
+  exit 1
+fi
+
 if ! [[ "$DURATION_ARG" =~ ^[0-9]+$ ]] || [[ "$DURATION_ARG" -lt 1 ]]; then
   echo "[ERROR] --duration must be a positive integer"
   exit 1
+fi
+
+if [[ -n "$RWND" ]]; then
+  if ! [[ "$RWND" =~ ^[0-9]+([KkMmGg])?$ ]]; then
+    echo "[ERROR] --rwnd must be like 32K, 64K, 128K, 256K, 1M, or plain bytes"
+    exit 1
+  fi
 fi
 
 echo "[INFO] Checking sudo credential..."
@@ -91,11 +112,8 @@ echo "[INFO] Experiment ID: $EXP_ID"
 cat >> "$OUT_DIR/meta.txt" <<EOF
 parallel=$PARALLEL
 duration=$DURATION_ARG
-rwnd_method=kernel_sysctl
-kernel_rwnd_enable=$(sysctl -n net.ipv4.tcp_rwnd_test_enable 2>/dev/null || echo "N/A")
-kernel_rwnd_port=$(sysctl -n net.ipv4.tcp_rwnd_test_port 2>/dev/null || echo "N/A")
-kernel_rwnd_bytes=$(sysctl -n net.ipv4.tcp_rwnd_test_bytes 2>/dev/null || echo "N/A")
-kernel_release=$(uname -r)
+rwnd=${RWND:-auto}
+rwnd_method=iperf3_window
 EOF
 
 "$BASE_DIR/bin/sync_time_check.sh" > "$OUT_DIR/time_sync.txt" 2>&1 || true
@@ -139,6 +157,10 @@ IPERF_ARGS=(
 
 if [[ "$DIRECTION" == "downlink" ]]; then
   IPERF_ARGS+=(-R)
+fi
+
+if [[ -n "$RWND" ]]; then
+  IPERF_ARGS+=(-w "$RWND")
 fi
 
 echo "[INFO] iperf3 args: ${IPERF_ARGS[*]}" | tee "$OUT_DIR/iperf_command.txt"
