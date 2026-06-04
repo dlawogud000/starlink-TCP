@@ -53,6 +53,7 @@ def main():
     plt.plot(times, rtts, linewidth=1)
     ax = plt.gca()
     ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
+    ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
     plt.xlabel("Time since start (s)")
     plt.ylabel("RTT to POP (ms)")
     plt.title("POP Ping RTT")

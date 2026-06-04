@@ -11,7 +11,7 @@ fi
 
 prev_ts=""
 
-sudo ping -i 0.01 -W 1 "$POP_IP" | while read -r line; do
+ping -i 0.01 -W 1 -I enx588694fda289 "$POP_IP" | while read -r line; do
   ts=$(date +%s.%N)
 
   if echo "$line" | grep -q "time="; then

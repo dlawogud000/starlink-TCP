@@ -1,15 +1,16 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if [ $# -lt 4 ]; then
-  echo "Usage: $0 <protocol:tcp|udp> <cc:cubic|bbr|none> <direction:downlink|uplink> <out_dir>"
+if [ $# -lt 5 ]; then
+  echo "Usage: $0 <protocol:tcp|udp> <cc:cubic|bbr|none> <direction:downlink|uplink> <flows> <out_dir>"
   exit 1
 fi
 
 PROTOCOL="$1"
 CC="$2"
 DIRECTION="$3"
-OUT_DIR="$4"
+FLOWS="$4"
+OUT_DIR="$5"
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 BASE_DIR="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -25,11 +26,11 @@ if [ "$DIRECTION" = "downlink" ]; then
 fi
 
 if [ "$PROTOCOL" = "tcp" ]; then
-  iperf3 -B "$LOCAL_IP" -c "$SERVER_IP" -p "$SERVER_PORT" $REVERSE_FLAG -4 -t "$DURATION" -i "$IPERF_INTERVAL" --json \
+  iperf3 -B "$LOCAL_IP" -c "$SERVER_IP" -p "$SERVER_PORT" $REVERSE_FLAG -4 -t "$DURATION" -i "$IPERF_INTERVAL" -P "$FLOWS" --json \
     > "$OUT_DIR/iperf.json" 2> "$OUT_DIR/iperf.stderr.log"
 elif [ "$PROTOCOL" = "udp" ]; then
   UDP_RATE="${UDP_RATE}" # change udp rate
-  iperf3 -B "$LOCAL_IP" -c "$SERVER_IP" -p "$SERVER_PORT" -u $REVERSE_FLAG -4 -b "$UDP_RATE" -t "$DURATION" -i "$IPERF_INTERVAL" --json --get-server-output \
+  iperf3 -B "$LOCAL_IP" -c "$SERVER_IP" -p "$SERVER_PORT" -u $REVERSE_FLAG -4 -b "$UDP_RATE" -t "$DURATION" -i "$IPERF_INTERVAL" -P "$FLOWS" --json --get-server-output \
     > "$OUT_DIR/iperf.json" 2> "$OUT_DIR/iperf.stderr.log"
 else
   echo "[ERROR] Unsupported protocol: $PROTOCOL"
