@@ -63,3 +63,5 @@ bin/tmp/*.pid
 
 #except logs
 logs/*
+
+Downloads/*
