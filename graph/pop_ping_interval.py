@@ -48,11 +48,11 @@ def main():
         print("[ERROR] No data")
         sys.exit(1)
 
-    START_TIME = 100
-    MAX_TIME = 120
+    # START_TIME = 100
+    # MAX_TIME = 120
     t0 = ts[0]
     times = [t - t0 for t in ts]
-    times = [t for t in times if t <= MAX_TIME]
+    # times = [t for t in times if t <= MAX_TIME]
     intervals = intervals[:len(times)]
 
     plt.figure(figsize=(max(times)/20, 4))
@@ -63,10 +63,10 @@ def main():
     ax.xaxis.set_major_locator(ticker.MultipleLocator(10))
     ax.xaxis.set_minor_locator(ticker.MultipleLocator(1))
 
-    max_time = MAX_TIME
-    for t in range(10, int(max_time) + 1, 15):
-        if t == 115 : plt.axvline(x=t, color="red", linestyle="--", linewidth=1,  alpha=0.7, label="Expected Handover Events")
-        else : plt.axvline(x=t, color="red", linestyle="--", linewidth=1,  alpha=0.7)
+    # max_time = MAX_TIME
+    # for t in range(10, int(max_time) + 1, 15):
+    #     if t == 115 : plt.axvline(x=t, color="red", linestyle="--", linewidth=1,  alpha=0.7, label="Expected Handover Events")
+    #     else : plt.axvline(x=t, color="red", linestyle="--", linewidth=1,  alpha=0.7)
 
     plt.xlabel("Time since start (s)", fontsize=18)
     plt.ylabel("Response interval (s)", fontsize=18)

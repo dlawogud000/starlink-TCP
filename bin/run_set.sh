@@ -17,7 +17,7 @@ cleanup_after_run() {
   bash "$BASE_DIR/bin/reload_usb.sh" || true
   sleep 5
   bash "$BASE_DIR/bin/stop_monitors.sh" || true
-  sleep 60
+  sleep 10
 }
 
 cleanup_without_reload() {
@@ -119,8 +119,9 @@ run_one() {
       continue
     fi
 
+    #run setup
     setsid bash "$BASE_DIR/bin/run_experiment.sh" \
-      tcp "$cc" downlink 2 "$run_id" &
+      tcp "$cc" downlink 1 "$run_id" &
     CURRENT_PGID="$!"
 
     start_health_watcher "$flag_file" "$health_log"
@@ -161,21 +162,12 @@ on_int() {
 
 trap on_int INT
 
-sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
-  sudo sysctl -w net.ipv4.tcp_leo_rwnd_enable=1
-  sudo sysctl -w net.ipv4.tcp_shrink_window=1
-  sudo sysctl -w net.ipv4.tcp_leo_rwnd_offset_ms=11955
-  sudo sysctl -w net.ipv4.tcp_leo_rwnd_outage_ms=20
-  sudo sysctl -w net.ipv4.tcp_leo_rwnd_fast_recovery=1
-for pre in 150; do
-  sudo sysctl -w net.ipv4.tcp_leo_rwnd_pre_ms="$pre"
-
-  for run in 1 2 3 4 5; do
-    run_one "bbr" "rc_offset_45_pre_${pre}_out_20" "$run"
-    sleep 180
-  done
-
-  sleep 10
+sudo sysctl -w net.ipv4.tcp_congestion_control=cubic
+sudo sysctl -w net.ipv4.tcp_leo_rwnd_enable=1
+sudo sysctl -w net.ipv4.tcp_leo_dynamic_enable=1
+for run in 1; do
+  run_one "cubic" "redhat_ec2" "$run"
+  sleep 60
 done
 
 # for pre in 150; do
@@ -184,17 +176,18 @@ done
 #   sudo sysctl -w net.ipv4.tcp_leo_rwnd_pre_ms="$pre"
 
 #   for run in 1 2 3 4 5 6 7 8; do
-#     run_one "bbr" "rc_45_${pre}_20" "$run"
+#     run_one "cubic" "rc_45_${pre}_20" "$run"
 #     sleep 60
 #   done
 
 #   sleep 10
 # done
 
+# sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
 # sudo sysctl -w net.ipv4.tcp_leo_rwnd_enable=0
-# sudo sysctl -w net.ipv4.tcp_shrink_window=0
+# sudo sysctl -w net.ipv4.tcp_leo_dynamic_enable=0
 
-# for run in 1 2 3 4 5; do
-#   run_one "bbr" "normal_bbr_downlink" "$run"
-#   sleep 180
+# for run in 1; do
+#   run_one "cubic" "normal_ec2" "$run"
+#   sleep 60
 # done

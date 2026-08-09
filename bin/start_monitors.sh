@@ -12,7 +12,7 @@ mkdir -p "$OUT_DIR"
 mkdir -p "$TMP_ROOT"
 
 # # tcpdump
-# sudo setsid tcpdump -i "$STARLINK_IFACE" -s "$TCPDUMP_SNAPLEN" -w "$OUT_DIR/ue_tcpdump.pcap" host "$SERVER_IP" \
+# sudo tcpdump -i "$STARLINK_IFACE" -s "$TCPDUMP_SNAPLEN" -w "$OUT_DIR/ue_tcpdump.pcap" host "$SERVER_IP" \
 #   > "$OUT_DIR/tcpdump_stdout.log" 2>&1 &
 # echo $! > "$TMP_ROOT/tcpdump.pid"
 
