@@ -42,6 +42,7 @@ stop_pidfile "$TMP_ROOT/pop_ping.pid" TERM
 stop_pidfile "$TMP_ROOT/ss.pid" TERM
 stop_pidfile "$TMP_ROOT/iface.pid" TERM
 stop_pidfile "$TMP_ROOT/tcpdump.pid" INT
+stop_pidfile "$TMP_ROOT/kernel_leo.pid" TERM
 
 
 sudo pkill -f "tcpdump -i $STARLINK_IFACE" 2>/dev/null || true

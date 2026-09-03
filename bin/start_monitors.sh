@@ -59,3 +59,11 @@ setsid bash "$BASE_DIR/bin/pop_interval.sh" \
   "$OUT_DIR/pop_interval.log" \
   > "$OUT_DIR/pop_interval.stdout.log" 2>&1 &
 echo $! > "$TMP_ROOT/pop_interval.pid"
+
+KERNEL_LOG="$OUT_DIR/kernel_leo.log"
+
+setsid bash -c '
+    dmesg -W --time-format=iso \
+        | stdbuf -oL grep --line-buffered "LEO "
+' > "$KERNEL_LOG" 2>&1 &
+echo $! > "$TMP_ROOT/kernel_leo.pid"

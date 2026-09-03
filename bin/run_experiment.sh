@@ -33,49 +33,49 @@ echo "$(date +%s.%N)" > "$OUT_DIR/client_start_time_epoch.txt"
 
 "$BASE_DIR/bin/start_monitors.sh" "$OUT_DIR" "$DIRECTION"
 
-start_app_rtt_receiver() {
-  if [ "${PROTOCOL}" != "tcp" ]; then
-    return 0
-  fi
+# start_app_rtt_receiver() {
+#   if [ "${PROTOCOL}" != "tcp" ]; then
+#     return 0
+#   fi
 
-  local port="${APP_RTT_PORT:-}"
-  if [ -z "$port" ]; then
-    echo "[INFO] APP_RTT_PORT is not set. Skipping app-level RTT receiver."
-    return 0
-  fi
+#   local port="${APP_RTT_PORT:-}"
+#   if [ -z "$port" ]; then
+#     echo "[INFO] APP_RTT_PORT is not set. Skipping app-level RTT receiver."
+#     return 0
+#   fi
 
-  local rtt_bin="$BASE_DIR/bin/app_layer_rtt/tcp_ping_receiver"
-  if [ ! -x "$rtt_bin" ]; then
-    echo "[WARN] app-level RTT receiver not executable or not found: $rtt_bin"
-    echo "       Build it first, e.g. gcc -O2 -Wall -Wextra tcp_ping_receiver.c -o bin/app_layer_rtt/tcp_ping_receiver"
-    return 0
-  fi
+#   local rtt_bin="$BASE_DIR/bin/app_layer_rtt/udp_ping_receiver"
+#   if [ ! -x "$rtt_bin" ]; then
+#     echo "[WARN] app-level RTT receiver not executable or not found: $rtt_bin"
+#     echo "       Build it first, e.g. gcc -O2 -Wall -Wextra udp_ping_receiver.c -o bin/app_layer_rtt/udp_ping_receiver"
+#     return 0
+#   fi
 
-  echo "[INFO] Starting app-level RTT receiver: server=$SERVER_IP port=$port bind=$LOCAL_IP"
-  setsid "$rtt_bin" "$SERVER_IP" "$port" "$LOCAL_IP" \
-    > "$OUT_DIR/app_rtt_receiver.stdout.log" \
-    2> "$OUT_DIR/app_rtt_receiver.stderr.log" &
-  echo $! > "$TMP_ROOT/app_rtt_receiver.pid"
+#   echo "[INFO] Starting app-level RTT receiver: server=$SERVER_IP port=$port bind=$LOCAL_IP"
+#   setsid "$rtt_bin" "$SERVER_IP" "$port" "$LOCAL_IP" \
+#     > "$OUT_DIR/app_rtt_receiver.stdout.log" \
+#     2> "$OUT_DIR/app_rtt_receiver.stderr.log" &
+#   echo $! > "$TMP_ROOT/app_rtt_receiver.pid"
 
-  # Give the TCP connection a short chance to reach the server-side RTT sender before iperf starts.
-  sleep "${APP_RTT_WARMUP_SEC:-0.3}"
-}
+#   # Give the TCP connection a short chance to reach the server-side RTT sender before iperf starts.
+#   sleep "${APP_RTT_WARMUP_SEC:-0.3}"
+# }
 
-stop_app_rtt_receiver() {
-  if [ -f "$TMP_ROOT/app_rtt_receiver.pid" ]; then
-    local pid
-    pid="$(cat "$TMP_ROOT/app_rtt_receiver.pid" 2>/dev/null || true)"
-    if [ -n "$pid" ]; then
-      kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
-      sleep 0.2
-      kill -KILL -- "-$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null || true
-    fi
-    rm -f "$TMP_ROOT/app_rtt_receiver.pid"
-  fi
-}
+# stop_app_rtt_receiver() {
+#   if [ -f "$TMP_ROOT/app_rtt_receiver.pid" ]; then
+#     local pid
+#     pid="$(cat "$TMP_ROOT/app_rtt_receiver.pid" 2>/dev/null || true)"
+#     if [ -n "$pid" ]; then
+#       kill -TERM -- "-$pid" 2>/dev/null || kill -TERM "$pid" 2>/dev/null || true
+#       sleep 0.2
+#       kill -KILL -- "-$pid" 2>/dev/null || kill -KILL "$pid" 2>/dev/null || true
+#     fi
+#     rm -f "$TMP_ROOT/app_rtt_receiver.pid"
+#   fi
+# }
 
 cleanup() {
-  stop_app_rtt_receiver || true
+  # stop_app_rtt_receiver || true
   "$BASE_DIR/bin/stop_monitors.sh" "$OUT_DIR" || true
 }
 
@@ -135,7 +135,7 @@ plot_graphs() {
 
 trap cleanup EXIT
 
-start_app_rtt_receiver
+# start_app_rtt_receiver
 
 if [ "$PROTOCOL" = "tcp" ] || [ "$PROTOCOL" = "udp" ]; then
   "$BASE_DIR/bin/run_iperf.sh" "$PROTOCOL" "$CC" "$DIRECTION" "$FLOWS" "$OUT_DIR"

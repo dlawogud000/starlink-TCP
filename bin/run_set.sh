@@ -121,7 +121,7 @@ run_one() {
 
     #run setup
     setsid bash "$BASE_DIR/bin/run_experiment.sh" \
-      tcp "$cc" downlink 1 "$run_id" &
+      tcp "$cc" downlink 2 "$run_id" &
     CURRENT_PGID="$!"
 
     start_health_watcher "$flag_file" "$health_log"
@@ -162,32 +162,29 @@ on_int() {
 
 trap on_int INT
 
-sudo sysctl -w net.ipv4.tcp_congestion_control=cubic
-sudo sysctl -w net.ipv4.tcp_leo_rwnd_enable=1
-sudo sysctl -w net.ipv4.tcp_leo_dynamic_enable=1
-for run in 1; do
-  run_one "cubic" "redhat_ec2" "$run"
-  sleep 60
-done
-
-# for pre in 150; do
-#   sudo sysctl -w net.ipv4.tcp_leo_rwnd_enable=1
-#   sudo sysctl -w net.ipv4.tcp_shrink_window=1
-#   sudo sysctl -w net.ipv4.tcp_leo_rwnd_pre_ms="$pre"
-
-#   for run in 1 2 3 4 5 6 7 8; do
-#     run_one "cubic" "rc_45_${pre}_20" "$run"
-#     sleep 60
-#   done
-
-#   sleep 10
+# sudo sysctl -w net.ipv4.tcp_congestion_control=cubic
+# sudo sysctl -w net.ipv4.tcp_leo_rwnd_enable=1
+# sudo sysctl -w net.ipv4.tcp_leo_dynamic_enable=1
+# sudo sysctl -w net.ipv4.tcp_leo_dynamic_recovery_enable=0
+# for run in 1 ; do
+#   run_one "cubic" "redhat_ec2_test" "$run"
+#   sleep 30
 # done
+
+
 
 # sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
 # sudo sysctl -w net.ipv4.tcp_leo_rwnd_enable=0
 # sudo sysctl -w net.ipv4.tcp_leo_dynamic_enable=0
 
-# for run in 1; do
-#   run_one "cubic" "normal_ec2" "$run"
+# for run in 2 3; do
+#   run_one "bbr" "normal_ec2_exp" "$run"
 #   sleep 60
 # done
+
+sudo sysctl -w net.ipv4.tcp_congestion_control=cubic
+
+for run in 11; do
+  run_one "cubic" "auto_ec2_exp" "$run"
+  sleep 30
+done
