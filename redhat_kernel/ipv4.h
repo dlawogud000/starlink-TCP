@@ -259,13 +259,42 @@ struct netns_ipv4 {
 	atomic_t	rt_genid;
 	siphash_key_t	ip_id_key;
 
-	// for LEO rwnd control
-	u8 sysctl_tcp_leo_rwnd_enable;	//0 or 1
-	u32 sysctl_tcp_leo_rwnd_min;	// 4
-	u32 sysctl_tcp_leo_rwnd_period_ms;	// 15000ms
-	u32 sysctl_tcp_leo_rwnd_offset_ms; 	// 12000ms
-	u32 sysctl_tcp_leo_rwnd_pre_handover_ms;	// 150ms
-	u32 sysctl_tcp_leo_rwnd_recovery_ms;	// 200ms
-	u32 sysctl_tcp_leo_rwnd_outage_ms;	// 100ms
+	// LEO rwnd control
+	u32 sysctl_tcp_leo_rwnd_enable;
+	u32 sysctl_tcp_leo_rwnd_period_ms;
+	u32 sysctl_tcp_leo_rwnd_offset_ms;
+	u32 sysctl_tcp_leo_rwnd_pre_ms;
+	u32 sysctl_tcp_leo_rwnd_outage_ms;
+	u32 sysctl_tcp_leo_rwnd_min_segs;
+	u32 sysctl_tcp_leo_rwnd_debug;
+	u32 sysctl_tcp_leo_rwnd_recovery_ms;
+	u32 sysctl_tcp_leo_rwnd_fast_recovery;
+
+	int sysctl_tcp_leo_dynamic_enable;
+	int sysctl_tcp_leo_dynamic_sample_ms;
+	int sysctl_tcp_leo_dynamic_freeze_guard_ms;
+
+	int sysctl_tcp_leo_dynamic_pre_min_ms;
+	int sysctl_tcp_leo_dynamic_pre_max_ms;
+
+	int sysctl_tcp_leo_dynamic_outage_min_ms;
+	int sysctl_tcp_leo_dynamic_outage_max_ms;
+	int sysctl_tcp_leo_dynamic_outage_guard_ms;
+
+	int sysctl_tcp_leo_dynamic_drain_min_ms;
+	int sysctl_tcp_leo_dynamic_drain_max_ms;
+
+	int sysctl_tcp_leo_dynamic_fallback_rtt_ms;
+	int sysctl_tcp_leo_dynamic_fallback_rate_mbps;
+	int sysctl_tcp_leo_dynamic_ewma_shift;
+
+	u32 sysctl_tcp_leo_dynamic_allow_ports[4];
+
+	int sysctl_tcp_leo_dynamic_prediction_guard_ms;
+	int sysctl_tcp_leo_dynamic_pred_guard_to_outage;
+
+	int sysctl_tcp_leo_dynamic_recovery_enable;
+	int sysctl_tcp_leo_dynamic_recovery_min_ms;
+	int sysctl_tcp_leo_dynamic_recovery_max_ms;
 };
 #endif

@@ -47,6 +47,8 @@
 
 #include <trace/events/tcp.h>
 
+#include <net/tcp_redhat.h>
+
 /* Refresh clocks of a TCP socket,
  * ensuring monotically increasing values.
  */
@@ -203,16 +205,17 @@ static inline void tcp_event_ack_sent(struct sock *sk, u32 rcv_nxt)
  * This MUST be enforced by all callers.
  */
 void tcp_select_initial_window(const struct sock *sk, int __space, __u32 mss,
-			       __u32 *rcv_wnd, __u32 *window_clamp,
+			       __u32 *rcv_wnd, __u32 *__window_clamp,
 			       int wscale_ok, __u8 *rcv_wscale,
 			       __u32 init_rcv_wnd)
 {
 	unsigned int space = (__space < 0 ? 0 : __space);
+	u32 window_clamp = READ_ONCE(*__window_clamp);
 
 	/* If no clamp set the clamp to the max possible scaled window */
-	if (*window_clamp == 0)
-		(*window_clamp) = (U16_MAX << TCP_MAX_WSCALE);
-	space = min(*window_clamp, space);
+	if (window_clamp == 0)
+		window_clamp = (U16_MAX << TCP_MAX_WSCALE);
+	space = min(window_clamp, space);
 
 	/* Quantize space offering to a multiple of mss if possible. */
 	if (space > mss)
@@ -239,14 +242,157 @@ void tcp_select_initial_window(const struct sock *sk, int __space, __u32 mss,
 		/* Set window scaling on max possible window */
 		space = max_t(u32, space, READ_ONCE(sock_net(sk)->ipv4.sysctl_tcp_rmem[2]));
 		space = max_t(u32, space, READ_ONCE(sysctl_rmem_max));
-		space = min_t(u32, space, *window_clamp);
+		space = min_t(u32, space, window_clamp);
 		*rcv_wscale = clamp_t(int, ilog2(space) - 15,
 				      0, TCP_MAX_WSCALE);
 	}
 	/* Set the clamp no higher than max representable value */
-	(*window_clamp) = min_t(__u32, U16_MAX << (*rcv_wscale), *window_clamp);
+	WRITE_ONCE(*__window_clamp,
+		   min_t(__u32, U16_MAX << (*rcv_wscale), window_clamp));
 }
 EXPORT_SYMBOL(tcp_select_initial_window);
+
+
+// LEO rwnd control
+static u32 tcp_leo_rwnd_min_window(const struct sock *sk)
+{
+	struct net *net = sock_net(sk);
+	const struct tcp_sock *tp = tcp_sk(sk);
+	const struct inet_connection_sock *icsk = inet_csk(sk);
+	u32 min_segs = READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_min_segs);
+	u32 mss = icsk->icsk_ack.rcv_mss;
+
+	if (!min_segs)
+		min_segs = 1;
+
+	if (!mss)
+		mss = tp->advmss;
+	if (!mss)
+		mss = TCP_MSS_DEFAULT;
+
+	return min_segs * mss;
+}
+
+static u32 tcp_leo_rwnd_phase_ms(const struct sock *sk)
+{
+	struct net *net = sock_net(sk);
+	u32 period = READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_period_ms);
+	u32 offset = READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_offset_ms);
+	u64 now_ms;
+	u32 rem;
+
+	if (!period)
+		return 0;
+
+	now_ms = div_u64(ktime_get_real_ns(), NSEC_PER_MSEC);
+	rem = do_div(now_ms, period);
+
+	offset %= period;
+
+	if (rem >= offset)
+		return rem - offset;
+
+	return rem + period - offset;
+}
+
+static u32 tcp_leo_rwnd_target(struct sock *sk, u32 normal_win)
+{
+	struct net *net = sock_net(sk);
+	u32 period = READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_period_ms);
+	u32 pre = READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_pre_ms);
+	u32 outage = READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_outage_ms);
+	u32 recovery = READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_recovery_ms);
+	u32 fast_recovery = READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_fast_recovery);
+	u32 phase, min_win, pre_start, recovery_end;
+	u64 delta;
+
+	if (!READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_enable))
+		return normal_win;
+
+	if (!period)
+		return normal_win;
+
+	if (pre >= period)
+		pre = period - 1;
+
+	min_win = tcp_leo_rwnd_min_window(sk);
+	if (normal_win <= min_win)
+		return normal_win;
+
+	phase = tcp_leo_rwnd_phase_ms(sk);
+	pre_start = period - pre;
+	recovery_end = outage + recovery;
+	delta = normal_win - min_win;
+
+	/* PRE_HANDOVER: gradually reduce rwnd before handover */
+	if (pre && phase >= pre_start) {
+		u32 elapsed = phase - pre_start;
+
+		return normal_win - div_u64(delta * elapsed, pre);
+	}
+
+	/* OUTAGE: keep rwnd near minimum */
+	if (phase < outage)
+		return min_win;
+
+	/* RECOVERY: gradually restore rwnd */
+	if (recovery && phase < recovery_end) {
+		u32 elapsed = phase - outage;
+
+		if (fast_recovery)
+			return normal_win;
+
+		return min_win + div_u64(delta * elapsed, recovery);
+	}
+	return normal_win;
+}
+
+static u32 tcp_leo_rwnd_clamp(struct sock *sk, u32 cur_win, u32 new_win)
+{
+	struct net *net = sock_net(sk);
+	const struct tcp_sock *tp = tcp_sk(sk);
+	u32 target, drained, safe_win;
+
+	struct inet_sock *inet = inet_sk(sk);
+
+	if (!READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_enable))
+		return new_win;
+
+	target = tcp_leo_rwnd_target(sk, new_win);
+
+	if (target >= new_win)
+		return new_win;
+
+	/*
+	 * RFC9840-style safe shrink:
+	 * Do not reduce advertised rwnd faster than bytes newly received
+	 * since the previous receive-window update point.
+	 */
+	drained = tp->rcv_nxt - tp->rcv_wup;
+
+	if (target < cur_win) {
+		if (drained >= cur_win - target)
+			safe_win = target;
+		else
+			safe_win = cur_win - drained;
+
+		new_win = min(new_win, safe_win);
+	} else {
+		new_win = min(new_win, target);
+	}
+
+	if (READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_debug)) {
+		static DEFINE_RATELIMIT_STATE(_rs, HZ, 10);
+
+		if (__ratelimit(&_rs)) {
+			pr_info("leo_rwnd: phase=%u cur=%u target=%u new=%u drained=%u rcv_nxt=%u rcv_wup=%u\n",
+				tcp_leo_rwnd_phase_ms(sk), cur_win, target,
+				new_win, drained, tp->rcv_nxt, tp->rcv_wup);
+		}
+	}
+
+	return new_win;
+}
 
 /* Chose a new window to advertise, update state in tcp_sock for the
  * socket, and return result with RFC1323 scaling applied.  The return
@@ -259,20 +405,31 @@ static u16 tcp_select_window(struct sock *sk)
 	struct net *net = sock_net(sk);
 	u32 old_win = tp->rcv_wnd;
 	u32 cur_win, new_win;
+	bool leo_dynamic;
+
+	leo_dynamic =
+		READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_enable) &&
+		READ_ONCE(net->ipv4.sysctl_tcp_leo_dynamic_enable);
 
 	/* Make the window 0 if we failed to queue the data because we
-	 * are out of memory. The window is temporary, so we don't store
-	 * it on the socket.
+	 * are out of memory.
 	 */
-	if (unlikely(inet_csk(sk)->icsk_ack.pending & ICSK_ACK_NOMEM))
+	if (unlikely(inet_csk(sk)->icsk_ack.pending & ICSK_ACK_NOMEM)) {
+		tp->pred_flags = 0;
+		tp->rcv_wnd = 0;
+		tp->rcv_wup = tp->rcv_nxt;
 		return 0;
+	}
 
 	cur_win = tcp_receive_window(tp);
 	new_win = __tcp_select_window(sk);
 
-	new_win = tcp_leo_rwnd_clamp(sk, cur_win, new_win);
+	if (leo_dynamic)
+		new_win = tcp_leo_dynamic_target(sk, new_win);
+	else if (READ_ONCE(net->ipv4.sysctl_tcp_leo_rwnd_enable))
+		new_win = tcp_leo_rwnd_clamp(sk, cur_win, new_win);
 
-	if (new_win < cur_win) {
+	if (new_win < cur_win && !leo_dynamic) {
 		/* Danger Will Robinson!
 		 * Don't update rcv_wup/rcv_wnd here or else
 		 * we will not be able to advertise a zero
@@ -313,108 +470,6 @@ static u16 tcp_select_window(struct sock *sk)
 	}
 
 	return new_win;
-}
-
-#define TCP_LEO_RWND_PERIOD_MS      15000U
-#define TCP_LEO_RWND_OFFSET_MS      12000U
-#define TCP_LEO_RWND_PRE_MS         150U
-#define TCP_LEO_RWND_OUTAGE_MS      100U
-#define TCP_LEO_RWND_RECOVERY_MS    250U
-#define TCP_LEO_RWND_MIN_SEGS       4U
-
-static u32 tcp_leo_rwnd_phase_ms(void)
-{
-	u64 now_ms;
-	u32 rem;
-
-	now_ms = div_u64(ktime_get_real_ns(), NSEC_PER_MSEC);
-	rem = do_div(now_ms, TCP_LEO_RWND_PERIOD_MS);
-
-	if (rem >= TCP_LEO_RWND_OFFSET_MS)
-		return rem - TCP_LEO_RWND_OFFSET_MS;
-
-	return (rem + TCP_LEO_RWND_PERIOD_MS - TCP_LEO_RWND_OFFSET_MS) % TCP_LEO_RWND_PERIOD_MS;
-}
-
-static u32 tcp_leo_rwnd_min_window(const struct sock *sk)
-{
-	const struct tcp_sock *tp = tcp_sk(sk);
-	const struct inet_connection_sock *icsk = inet_csk(sk);
-	u32 mss = icsk->icsk_ack.rcv_mss;
-
-	if (!mss)
-		mss = tp->advmss;
-	if (!mss)
-		mss = TCP_MSS_DEFAULT;
-
-	return TCP_LEO_RWND_MIN_SEGS * mss;
-}
-
-static u32 tcp_leo_rwnd_target(struct sock *sk, u32 normal_win)
-{
-	u32 phase = tcp_leo_rwnd_phase_ms();
-	u32 min_win = tcp_leo_rwnd_min_window(sk);
-	u32 pre_start = TCP_LEO_RWND_PERIOD_MS - TCP_LEO_RWND_PRE_MS;
-	u32 outage_end = TCP_LEO_RWND_OUTAGE_MS;
-	u32 recovery_end = TCP_LEO_RWND_OUTAGE_MS + TCP_LEO_RWND_RECOVERY_MS;
-	u64 delta;
-
-	if (normal_win <= min_win)
-		return normal_win;
-
-	delta = normal_win - min_win;
-
-	/* PRE_HANDOVER: [period - pre_ms, period) */
-	if (phase >= pre_start) {
-		u32 elapsed = phase - pre_start;
-
-		return normal_win -
-		       div_u64(delta * elapsed, TCP_LEO_RWND_PRE_MS);
-	}
-
-	/* OUTAGE: [0, outage_ms) */
-	if (phase < outage_end)
-		return min_win;
-
-	/* RECOVERY: [outage_ms, outage_ms + recovery_ms) */
-	if (phase < recovery_end) {
-		u32 elapsed = phase - outage_end;
-
-		return min_win +
-		       div_u64(delta * elapsed, TCP_LEO_RWND_RECOVERY_MS);
-	}
-
-	/* NORMAL */
-	return normal_win;
-}
-
-static u32 tcp_leo_rwnd_clamp(struct sock *sk, u32 cur_win, u32 new_win)
-{
-	const struct tcp_sock *tp = tcp_sk(sk);
-	u32 target = tcp_leo_rwnd_target(sk, new_win);
-	u32 drained;
-	u32 safe_win;
-
-	if (target >= new_win)
-		return new_win;
-
-	/*
-	 * Safe shrink rule:
-	 * Do not reduce advertised rwnd faster than bytes newly received
-	 * since the last receive-window update point.
-	 */
-	drained = tp->rcv_nxt - tp->rcv_wup;
-
-	if (target < cur_win) {
-		if (drained >= cur_win - target)
-			safe_win = target;
-		else
-			safe_win = cur_win - drained;
-
-		return min(new_win, safe_win);
-	}
-
-	return min(new_win, target);
 }
 
 /* Packet ECN state for a SYN-ACK */
@@ -984,8 +1039,10 @@ static unsigned int tcp_syn_options(struct sock *sk, struct sk_buff *skb,
 		unsigned int size;
 
 		if (mptcp_syn_options(sk, skb, &size, &opts->mptcp)) {
-			opts->options |= OPTION_MPTCP;
-			remaining -= size;
+			if (remaining >= size) {
+				opts->options |= OPTION_MPTCP;
+				remaining -= size;
+			}
 		}
 	}
 
@@ -1402,7 +1459,7 @@ static int __tcp_transmit_skb(struct sock *sk, struct sk_buff *skb,
 	tp = tcp_sk(sk);
 	prior_wstamp = tp->tcp_wstamp_ns;
 	tp->tcp_wstamp_ns = max(tp->tcp_wstamp_ns, tp->tcp_clock_cache);
-	skb_set_delivery_time(skb, tp->tcp_wstamp_ns, true);
+	skb_set_delivery_time(skb, tp->tcp_wstamp_ns, SKB_CLOCK_MONOTONIC);
 	if (clone_it) {
 		oskb = skb;
 
@@ -1752,7 +1809,7 @@ int tcp_fragment(struct sock *sk, enum tcp_queue tcp_queue,
 
 	skb_split(skb, buff, len);
 
-	skb_set_delivery_time(buff, skb->tstamp, true);
+	skb_set_delivery_time(buff, skb->tstamp, SKB_CLOCK_MONOTONIC);
 	tcp_fragment_tstamp(skb, buff);
 
 	old_factor = tcp_skb_pcount(skb);
@@ -2316,7 +2373,8 @@ static bool tcp_tso_should_defer(struct sock *sk, struct sk_buff *skb,
 				 u32 max_segs)
 {
 	const struct inet_connection_sock *icsk = inet_csk(sk);
-	u32 send_win, cong_win, limit, in_flight;
+	u32 send_win, cong_win, limit, in_flight, threshold;
+	u64 srtt_in_ns, expected_ack, how_far_is_the_ack;
 	struct tcp_sock *tp = tcp_sk(sk);
 	struct sk_buff *head;
 	int win_divisor;
@@ -2378,9 +2436,19 @@ static bool tcp_tso_should_defer(struct sock *sk, struct sk_buff *skb,
 	head = tcp_rtx_queue_head(sk);
 	if (!head)
 		goto send_now;
-	delta = tp->tcp_clock_cache - head->tstamp;
-	/* If next ACK is likely to come too late (half srtt), do not defer */
-	if ((s64)(delta - (u64)NSEC_PER_USEC * (tp->srtt_us >> 4)) < 0)
+
+	srtt_in_ns = (u64)(NSEC_PER_USEC >> 3) * tp->srtt_us;
+	/* When is the ACK expected ? */
+	expected_ack = head->tstamp + srtt_in_ns;
+	/* How far from now is the ACK expected ? */
+	how_far_is_the_ack = expected_ack - tp->tcp_clock_cache;
+
+	/* If next ACK is likely to come too late,
+	 * ie in more than min(1ms, half srtt), do not defer.
+	 */
+	threshold = min(srtt_in_ns >> 1, NSEC_PER_MSEC);
+
+	if ((s64)(how_far_is_the_ack - threshold) > 0)
 		goto send_now;
 
 	/* Ok, it looks like it is advisable to defer.
@@ -2446,9 +2514,7 @@ static bool tcp_can_coalesce_send_queue_head(struct sock *sk, int len)
 		if (len <= skb->len)
 			break;
 
-		if (unlikely(TCP_SKB_CB(skb)->eor) ||
-		    tcp_has_tx_tstamp(skb) ||
-		    !skb_pure_zcopy_same(skb, next))
+		if (tcp_has_tx_tstamp(skb) || !tcp_skb_can_collapse(skb, next))
 			return false;
 
 		len -= skb->len;
@@ -2833,7 +2899,7 @@ static bool tcp_write_xmit(struct sock *sk, unsigned int mss_now, int nonagle,
 		if (unlikely(tp->repair) && tp->repair_queue == TCP_SEND_QUEUE) {
 			/* "skb_mstamp_ns" is used as a start point for the retransmit timer */
 			tp->tcp_wstamp_ns = tp->tcp_clock_cache;
-			skb_set_delivery_time(skb, tp->tcp_wstamp_ns, true);
+			skb_set_delivery_time(skb, tp->tcp_wstamp_ns, SKB_CLOCK_MONOTONIC);
 			list_move_tail(&skb->tcp_tsorted_anchor, &tp->tsorted_sent_queue);
 			tcp_init_tso_segs(skb, mss_now);
 			goto repair; /* Skip network transmission */
@@ -3668,7 +3734,9 @@ void tcp_send_fin(struct sock *sk)
 			return;
 		}
 	} else {
-		skb = alloc_skb_fclone(MAX_TCP_HEADER, sk->sk_allocation);
+		skb = alloc_skb_fclone(MAX_TCP_HEADER,
+				       sk_gfp_mask(sk, GFP_ATOMIC |
+						       __GFP_NOWARN));
 		if (unlikely(!skb))
 			return;
 
@@ -3816,11 +3884,11 @@ struct sk_buff *tcp_make_synack(const struct sock *sk, struct dst_entry *dst,
 #ifdef CONFIG_SYN_COOKIES
 	if (unlikely(synack_type == TCP_SYNACK_COOKIE && ireq->tstamp_ok))
 		skb_set_delivery_time(skb, cookie_init_timestamp(req, now),
-				      true);
+				      SKB_CLOCK_MONOTONIC);
 	else
 #endif
 	{
-		skb_set_delivery_time(skb, now, true);
+		skb_set_delivery_time(skb, now, SKB_CLOCK_MONOTONIC);
 		if (!tcp_rsk(req)->snt_synack) /* Timestamp first SYNACK */
 			tcp_rsk(req)->snt_synack = tcp_skb_timestamp_us(skb);
 	}
@@ -3907,7 +3975,7 @@ struct sk_buff *tcp_make_synack(const struct sock *sk, struct dst_entry *dst,
 	bpf_skops_write_hdr_opt((struct sock *)sk, skb, req, syn_skb,
 				synack_type, &opts);
 
-	skb_set_delivery_time(skb, now, true);
+	skb_set_delivery_time(skb, now, SKB_CLOCK_MONOTONIC);
 	tcp_add_tx_delay(skb, tp);
 
 	return skb;
@@ -3960,7 +4028,7 @@ static void tcp_connect_init(struct sock *sk)
 	tcp_ca_dst_init(sk, dst);
 
 	if (!tp->window_clamp)
-		tp->window_clamp = dst_metric(dst, RTAX_WINDOW);
+		WRITE_ONCE(tp->window_clamp, dst_metric(dst, RTAX_WINDOW));
 	tp->advmss = tcp_mss_clamp(tp, dst_metric_advmss(dst));
 
 	tcp_initialize_rcv_mss(sk);
@@ -3968,7 +4036,7 @@ static void tcp_connect_init(struct sock *sk)
 	/* limit the window selection if the user enforce a smaller rx buffer */
 	if (sk->sk_userlocks & SOCK_RCVBUF_LOCK &&
 	    (tp->window_clamp > tcp_full_space(sk) || tp->window_clamp == 0))
-		tp->window_clamp = tcp_full_space(sk);
+		WRITE_ONCE(tp->window_clamp, tcp_full_space(sk));
 
 	rcv_wnd = tcp_rwnd_init_bpf(sk);
 	if (rcv_wnd == 0)
@@ -4091,7 +4159,7 @@ static int tcp_send_syn_data(struct sock *sk, struct sk_buff *syn)
 
 	err = tcp_transmit_skb(sk, syn_data, 1, sk->sk_allocation);
 
-	skb_set_delivery_time(syn, syn_data->skb_mstamp_ns, true);
+	skb_set_delivery_time(syn, syn_data->skb_mstamp_ns, SKB_CLOCK_MONOTONIC);
 
 	/* Now full SYN+DATA was cloned and sent (or not),
 	 * remove the SYN from the original skb (syn_data)
