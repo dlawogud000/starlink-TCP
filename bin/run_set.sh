@@ -162,29 +162,26 @@ on_int() {
 
 trap on_int INT
 
+sudo sysctl -w net.ipv4.tcp_leo_rwnd_enable=1
+sudo sysctl -w net.ipv4.tcp_leo_dynamic_enable=0
+sudo sysctl -w net.ipv4.tcp_congestion_control=cubic
+for run in 1 2 3 4 5 ; do
+  run_one "cubic" "redhatv1" "$run"
+  sleep 10
+done
+
+
+
 # sudo sysctl -w net.ipv4.tcp_congestion_control=cubic
-# sudo sysctl -w net.ipv4.tcp_leo_rwnd_enable=1
-# sudo sysctl -w net.ipv4.tcp_leo_dynamic_enable=1
-# sudo sysctl -w net.ipv4.tcp_leo_dynamic_recovery_enable=0
-# for run in 1 ; do
-#   run_one "cubic" "redhat_ec2_test" "$run"
-#   sleep 30
-# done
-
-
-
-# sudo sysctl -w net.ipv4.tcp_congestion_control=bbr
-# sudo sysctl -w net.ipv4.tcp_leo_rwnd_enable=0
-# sudo sysctl -w net.ipv4.tcp_leo_dynamic_enable=0
 
 # for run in 2 3; do
-#   run_one "bbr" "normal_ec2_exp" "$run"
+#   run_one "cubic" "normal_ec2_exp" "$run"
 #   sleep 60
 # done
 
-sudo sysctl -w net.ipv4.tcp_congestion_control=cubic
+# sudo sysctl -w net.ipv4.tcp_congestion_control=cubic
 
-for run in 11; do
-  run_one "cubic" "auto_ec2_exp" "$run"
-  sleep 30
-done
+# for run in 11; do
+#   run_one "cubic" "auto_ec2_exp" "$run"
+#   sleep 30
+# done

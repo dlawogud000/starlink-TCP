@@ -85,6 +85,10 @@ class TargetState:
     events: Deque[float] = field(default_factory=lambda: collections.deque(maxlen=2048))
     replies: int = 0
     candidate_count: int = 0
+    common_support_count: int = 0
+    recent_common_support: Deque[int] = field(
+        default_factory=lambda: collections.deque(maxlen=32)
+    )
 
     def baseline(self, min_samples: int = 50) -> Optional[Tuple[float, float]]:
         if len(self.intervals) < min_samples:
@@ -200,7 +204,8 @@ def score_period(
     # Reject divisor periods (e.g., 5 s for a true 15 s periodicity) by penalizing
     # solutions that explain most adjacent intervals only as k=2,3,... multiples.
     complexity_penalty = 1.0 + skip_penalty * max(0.0, mean_k - 1.0)
-    score = fit_ratio * (0.70 + 0.30 * one_cycle_ratio) / complexity_penalty
+    # score = fit_ratio * (0.70 + 0.30 * one_cycle_ratio) / complexity_penalty
+    score = fit_ratio / complexity_penalty
 
     refined = median(normalized)
     # A single refinement pass usually removes grid quantization error.
@@ -220,7 +225,7 @@ def score_period(
             one_cycle_ratio = sum(1 for k in ks if k == 1) / len(ks)
             mean_k = sum(ks) / len(ks)
             complexity_penalty = 1.0 + skip_penalty * max(0.0, mean_k - 1.0)
-            score = fit_ratio * (0.70 + 0.30 * one_cycle_ratio) / complexity_penalty
+            score = fit_ratio / complexity_penalty
 
     return PeriodFit(
         period_s=period,
@@ -276,44 +281,72 @@ def estimate_period(
 
 def cluster_common_events(
     states: Dict[str, TargetState],
+    targets: Sequence[str],
     *,
     now: float,
     window_s: float,
     tolerance_s: float,
     min_targets: int,
 ) -> List[Tuple[float, int, Tuple[str, ...]]]:
+
     points: List[Tuple[float, str]] = []
     cutoff = now - window_s
-    for target, st in states.items():
+
+    for target in targets:
+        st = states[target]
+
         for ts in st.events:
             if ts >= cutoff:
                 points.append((ts, target))
+
     points.sort()
+
     if not points:
         return []
 
     clusters: List[List[Tuple[float, str]]] = []
     cur: List[Tuple[float, str]] = [points[0]]
+
     for point in points[1:]:
         center = median([x[0] for x in cur])
+
         if point[0] - center <= tolerance_s:
             cur.append(point)
         else:
             clusters.append(cur)
             cur = [point]
+
     clusters.append(cur)
 
-    out: List[Tuple[float, int, Tuple[str, ...]]] = []
+    out: List[
+        Tuple[float, int, Tuple[str, ...]]
+    ] = []
+
     for cluster in clusters:
-        supporters = tuple(sorted(set(t for _, t in cluster)))
+        supporters = tuple(
+            sorted(set(t for _, t in cluster))
+        )
+
         if len(supporters) < min_targets:
             continue
-        # At most one timestamp per target contributes to the center.
+
         per_target: Dict[str, float] = {}
+
         for ts, target in cluster:
             per_target.setdefault(target, ts)
-        center = median(list(per_target.values()))
-        out.append((center, len(per_target), tuple(sorted(per_target))))
+
+        center = median(
+            list(per_target.values())
+        )
+
+        out.append(
+            (
+                center,
+                len(per_target),
+                tuple(sorted(per_target)),
+            )
+        )
+
     return out
 
 
@@ -420,23 +453,40 @@ def unique(items: Iterable[str]) -> List[str]:
 def build_probe_targets(args: argparse.Namespace) -> List[str]:
     explicit = list(args.target or [])
     bootstraps = list(args.bootstrap or [])
-    hops: List[str] = []
-    if args.discover_hops and bootstraps:
-        hops = discover_route_hops(
-            bootstraps[0],
-            args.traceroute_hops,
-            args.traceroute_timeout,
-            args.interface,
-        )
-        if hops:
-            print("[DISCOVERY] traceroute candidates:", ", ".join(hops))
-        else:
-            print("[DISCOVERY] no responsive traceroute hops found; using endpoint targets only")
 
-    # Keep only a few near-route hops; including the local gateway is harmless because
-    # it should fail the cross-target periodicity test if the disruption is after it.
-    selected_hops = hops[: args.max_route_targets]
-    targets = unique(explicit + selected_hops + bootstraps)
+    all_hops: List[str] = []
+
+    if args.discover_hops:
+        for bootstrap in bootstraps:
+            hops = discover_route_hops(
+                bootstrap,
+                args.traceroute_hops,
+                args.traceroute_timeout,
+                args.interface,
+            )
+
+            if hops:
+                print(
+                    f"[DISCOVERY] traceroute {bootstrap}: "
+                    + ", ".join(hops)
+                )
+
+                usable = hops[
+                    args.skip_route_hops:
+                ]
+
+                all_hops.extend(
+                    usable[: args.max_route_targets]
+                )
+
+    selected_hops = unique(all_hops)
+
+    targets = unique(
+        explicit
+        + bootstraps
+        + selected_hops
+    )
+
     return targets[: args.max_targets]
 
 
@@ -528,6 +578,138 @@ def compute_prediction_guard_ms(
         min(max_ms, guard),
     )
 
+def target_participation_ratio(
+    st: TargetState,
+) -> float:
+    if not st.recent_common_support:
+        return 0.0
+
+    return (
+        sum(st.recent_common_support)
+        / len(st.recent_common_support)
+    )
+
+def choose_active_targets(
+    states: Dict[str, TargetState],
+    all_targets: Sequence[str],
+    bootstraps: Sequence[str],
+    max_targets: int,
+    min_ratio: float,
+) -> List[str]:
+
+    scored = []
+
+    for target in all_targets:
+        st = states[target]
+
+        ratio = target_participation_ratio(st)
+
+        if ratio < min_ratio:
+            continue
+
+        scored.append(
+            (
+                ratio,
+                st.common_support_count,
+                target,
+            )
+        )
+
+    scored.sort(reverse=True)
+
+    selected: List[str] = []
+
+    # Keep at least one stable public endpoint.
+    endpoint_candidates = [
+        item
+        for item in scored
+        if item[2] in bootstraps
+    ]
+
+    if endpoint_candidates:
+        selected.append(
+            endpoint_candidates[0][2]
+        )
+
+    for _, _, target in scored:
+        if target in selected:
+            continue
+
+        selected.append(target)
+
+        if len(selected) >= max_targets:
+            break
+
+    return selected
+
+
+
+def reset_probe_session(states: Dict[str, TargetState], targets: Sequence[str]) -> None:
+    """Reset only reply-edge state before (re)starting probes.
+
+    Keep the long-term interval baseline and historical events; the former lets a
+    short validation become useful immediately, while the analysis window filters
+    old events naturally.  Resetting last_reply_ts prevents the first reply after
+    a long sleep from being interpreted as one huge gap.
+    """
+    for target in targets:
+        if target in states:
+            states[target].last_reply_ts = None
+
+
+def start_probe_processes(
+    targets: Sequence[str],
+    interval_s: float,
+    interface: Optional[str],
+    selector: selectors.BaseSelector,
+    procs: Dict[int, Tuple[str, subprocess.Popen]],
+) -> int:
+    """Start ping processes for targets not already running."""
+    running = {target for target, _proc in procs.values()}
+    started = 0
+    for target in targets:
+        if target in running:
+            continue
+        try:
+            proc = start_ping(target, interval_s, interface)
+        except Exception as e:
+            print(f"[WARN] failed to start ping for {target}: {e}")
+            continue
+        assert proc.stdout is not None
+        selector.register(proc.stdout, selectors.EVENT_READ, target)
+        procs[proc.pid] = (target, proc)
+        started += 1
+    return started
+
+
+def stop_probe_processes(
+    procs: Dict[int, Tuple[str, subprocess.Popen]],
+    selector: selectors.BaseSelector,
+) -> None:
+    """Stop all currently running ping processes and unregister their pipes."""
+    for _pid, (_target, proc) in list(procs.items()):
+        if proc.stdout is not None:
+            try:
+                selector.unregister(proc.stdout)
+            except Exception:
+                pass
+        try:
+            proc.terminate()
+        except OSError:
+            pass
+
+    for _pid, (_target, proc) in list(procs.items()):
+        try:
+            proc.wait(timeout=1.0)
+        except subprocess.TimeoutExpired:
+            try:
+                proc.kill()
+                proc.wait(timeout=1.0)
+            except Exception:
+                pass
+    procs.clear()
+
+
 def parse_args() -> argparse.Namespace:
     p = argparse.ArgumentParser()
     p.add_argument(
@@ -539,148 +721,99 @@ def parse_args() -> argparse.Namespace:
         ),
     )
     p.add_argument("--target", action="append", help="Explicit probe target; repeatable")
-    p.add_argument("--bootstrap", action="append", default=None,
-                   help="Stable Internet endpoint used for route discovery/probing; repeatable")
+    p.add_argument(
+        "--bootstrap",
+        action="append",
+        default=None,
+        help="Stable Internet endpoint used for route discovery/probing; repeatable",
+    )
     p.add_argument("--discover-hops", action="store_true", default=True)
     p.add_argument("--no-discover-hops", dest="discover_hops", action="store_false")
     p.add_argument("--traceroute-hops", type=int, default=8)
     p.add_argument("--traceroute-timeout", type=float, default=0.4)
+    p.add_argument("--skip-route-hops", type=int, default=1,
+                   help="Skip initial traceroute hops; default 1 excludes the local Starlink router.")
     p.add_argument("--max-route-targets", type=int, default=3)
     p.add_argument("--max-targets", type=int, default=5)
 
     p.add_argument("--probe-interval-ms", type=float, default=20.0)
     p.add_argument("--min-baseline-samples", type=int, default=100)
-    p.add_argument("--min-gap-ms", type=float, default=45.0)
-    p.add_argument("--gap-factor", type=float, default=2.2)
-    p.add_argument("--mad-sigma", type=float, default=6.0)
+    p.add_argument("--min-gap-ms", type=float, default=50.0)
+    p.add_argument("--gap-factor", type=float, default=2.3)
+    p.add_argument("--mad-sigma", type=float, default=7.0)
     p.add_argument("--event-merge-ms", type=float, default=500.0)
-    p.add_argument("--cross-target-ms", type=float, default=180.0)
+    p.add_argument("--cross-target-ms", type=float, default=100.0)
     p.add_argument("--min-targets", type=int, default=2)
 
     p.add_argument("--period-min", type=float, default=5.0)
     p.add_argument("--period-max", type=float, default=30.0)
     p.add_argument("--period-tolerance-ms", type=float, default=180.0)
     p.add_argument("--max-multiple", type=int, default=6)
-    p.add_argument("--skip-penalty", type=float, default=0.35)
+    p.add_argument("--skip-penalty", type=float, default=0.30)
     p.add_argument("--min-events", type=int, default=6)
     p.add_argument("--min-score", type=float, default=0.70)
-    p.add_argument("--min-fit-ratio", type=float, default=0.80)
+    p.add_argument("--min-fit-ratio", type=float, default=0.70)
     p.add_argument("--learn-seconds", type=float, default=120.0,
                    help="Minimum observation time before activation")
     p.add_argument("--analysis-window", type=float, default=300.0)
     p.add_argument("--analysis-every", type=float, default=5.0)
 
-    p.add_argument(
-        "--period-lock-window", type=int, default=8,
-        help="Number of recent good period fits used for median period locking.",
-    )
-    p.add_argument(
-        "--period-lock-min-fits", type=int, default=3,
-        help="Minimum number of recent good fits required before activation.",
-    )
-    p.add_argument(
-        "--phase-resync-threshold-ms", type=float, default=40.0,
-        help="Rewrite offset only when absolute phase error reaches this threshold.",
-    )
-    p.add_argument(
-        "--phase-resync-min-cycles", type=float, default=3.0,
-        help="Minimum locked periods between kernel phase resynchronizations.",
-    )
-    p.add_argument(
-        "--phase-resync-alpha", type=float, default=1.0,
-        help="Fraction of observed phase error applied during resynchronization.",
-    )
-    p.add_argument(
-        "--period-relearn-threshold-ms", type=float, default=100.0,
-        help="Observed period deviation that counts as a fundamental-period mismatch.",
-    )
-    p.add_argument(
-        "--period-relearn-count", type=int, default=5,
-        help="Consecutive mismatching good fits required before returning to LEARNING.",
-    )
-    p.add_argument(
-        "--lost-cycles",
-        type=float,
-        default=8.0,
-        help=(
-            "A recent phase-consistent event is considered missing after this many periods. "
-            "This alone does NOT disable RedHAT; the current period fit must also be bad."
-        ),
-    )
-    p.add_argument(
-        "--disable-grace-cycles",
-        type=float,
-        default=8.0,
-        help=(
-            "Minimum number of learned periods to remain ACTIVE before disable is allowed. "
-            "Default: 8 cycles."
-        ),
-    )
-    p.add_argument(
-        "--reactivation-cooldown-cycles",
-        type=float,
-        default=2.0,
-        help=(
-            "After a disable, wait this many last-known periods before allowing ACTIVE again. "
-            "This prevents rapid ACTIVE/DISABLE flapping. Default: 2 cycles."
-        ),
-    )
-    p.add_argument(
-        "--phase-consensus-window",
-        type=int,
-        default=5,
-        help="Recent phase errors retained for consensus resynchronization.",
-    )
+    p.add_argument("--period-lock-window", type=int, default=8,
+                   help="Number of recent good period fits used for median period locking.")
+    p.add_argument("--period-lock-min-fits", type=int, default=3,
+                   help="Minimum number of recent good fits required before activation.")
+    p.add_argument("--phase-resync-threshold-ms", type=float, default=40.0,
+                   help="Rewrite offset only when consensus phase error reaches this threshold.")
+    p.add_argument("--phase-resync-min-cycles", type=float, default=3.0,
+                   help="Minimum locked periods between kernel phase resynchronizations.")
+    p.add_argument("--phase-resync-alpha", type=float, default=1.0,
+                   help="Fraction of consensus phase error applied during resynchronization.")
+    p.add_argument("--period-relearn-threshold-ms", type=float, default=100.0,
+                   help="Observed period deviation that counts as a fundamental-period mismatch.")
+    p.add_argument("--period-relearn-count", type=int, default=5,
+                   help="Consecutive structurally-good but mismatching fits before relearning.")
+    p.add_argument("--reactivation-cooldown-cycles", type=float, default=2.0,
+                   help="Cooldown after disabling before activation is allowed again.")
+    # Retained for CLI compatibility with older runs.  In the self-suspending
+    # ACTIVE design, confirmation/validation session outcomes replace the old
+    # continuous lost-signature timer.
+    p.add_argument("--lost-cycles", type=float, default=8.0,
+                   help="Compatibility option; not used while ACTIVE probes are suspended.")
+    p.add_argument("--disable-grace-cycles", type=float, default=8.0,
+                   help="Compatibility option; not used while ACTIVE probes are suspended.")
 
-    p.add_argument(
-        "--phase-consensus-min-events",
-        type=int,
-        default=3,
-        help="Minimum recent phase events required before phase resync.",
-    )
+    p.add_argument("--phase-consensus-window", type=int, default=5,
+                   help="Recent signed phase errors retained for consensus resynchronization.")
+    p.add_argument("--phase-consensus-min-events", type=int, default=3,
+                   help="Minimum recent phase events required before phase resync.")
+    p.add_argument("--phase-consensus-sign-ratio", type=float, default=0.80,
+                   help="Required fraction of phase errors having the median's sign.")
 
-    p.add_argument(
-        "--phase-consensus-sign-ratio",
-        type=float,
-        default=0.80,
-        help="Required fraction of phase errors having the same sign as the median.",
-    )
-    p.add_argument(
-        "--auto-prediction-guard",
-        action="store_true",
-        help="Automatically derive kernel prediction guard from phase uncertainty.",
-    )
+    p.add_argument("--auto-prediction-guard", action="store_true",
+                   help="Automatically derive kernel prediction guard from phase uncertainty.")
+    p.add_argument("--prediction-guard-window", type=int, default=12)
+    p.add_argument("--prediction-guard-safety-ms", type=float, default=15.0)
+    p.add_argument("--prediction-guard-min-ms", type=int, default=20)
+    p.add_argument("--prediction-guard-max-ms", type=int, default=120)
+    p.add_argument("--prediction-guard-update-step-ms", type=int, default=10,
+                   help="Do not rewrite the guard for changes smaller than this.")
 
-    p.add_argument(
-        "--prediction-guard-window",
-        type=int,
-        default=12,
-    )
+    p.add_argument("--active-targets", type=int, default=3,
+                   help="Number of best targets used during ACTIVE confirmation/validation.")
+    p.add_argument("--active-min-participation", type=float, default=0.70,
+                   help="Minimum learning-stage common-event participation ratio for an ACTIVE target.")
 
-    p.add_argument(
-        "--prediction-guard-safety-ms",
-        type=float,
-        default=15.0,
-    )
-
-    p.add_argument(
-        "--prediction-guard-min-ms",
-        type=int,
-        default=20,
-    )
-
-    p.add_argument(
-        "--prediction-guard-max-ms",
-        type=int,
-        default=120,
-    )
-
-    p.add_argument(
-        "--prediction-guard-update-step-ms",
-        type=int,
-        default=10,
-        help="Do not rewrite the guard for changes smaller than this.",
-    )
+    # Self-suspending probing policy.
+    p.add_argument("--active-confirm-cycles", type=float, default=5.0,
+                   help="Keep probing for this many locked periods immediately after activation.")
+    p.add_argument("--active-confirm-min-events", type=int, default=2,
+                   help="Minimum phase-consistent events required during ACTIVE confirmation.")
+    p.add_argument("--validation-interval-min", type=float, default=30.0,
+                   help="While ACTIVE/SLEEP, start a short active validation this many minutes later.")
+    p.add_argument("--validation-cycles", type=float, default=5.0,
+                   help="Length of each periodic validation in locked periods.")
+    p.add_argument("--validation-min-events", type=int, default=3,
+                   help="Minimum phase-consistent events required for validation success.")
 
     p.add_argument("--manage-enable", action="store_true",
                    help="Actually enable/disable RedHAT based on detector state")
@@ -689,8 +822,23 @@ def parse_args() -> argparse.Namespace:
     args = p.parse_args()
 
     if args.bootstrap is None:
-        # These are merely generic reachability targets, not Starlink-specific knowledge.
         args.bootstrap = ["1.1.1.1", "8.8.8.8"]
+
+    # Defensive argument normalization.
+    args.skip_route_hops = max(0, args.skip_route_hops)
+    args.max_targets = max(1, args.max_targets)
+    args.max_route_targets = max(0, args.max_route_targets)
+    args.min_targets = max(1, args.min_targets)
+    args.active_targets = max(args.min_targets, args.active_targets)
+    args.period_lock_min_fits = max(1, args.period_lock_min_fits)
+    args.period_lock_window = max(args.period_lock_min_fits, args.period_lock_window)
+    args.phase_consensus_min_events = max(1, args.phase_consensus_min_events)
+    args.phase_consensus_window = max(args.phase_consensus_min_events, args.phase_consensus_window)
+    args.active_confirm_cycles = max(1.0, args.active_confirm_cycles)
+    args.validation_cycles = max(1.0, args.validation_cycles)
+    args.active_confirm_min_events = max(1, args.active_confirm_min_events)
+    args.validation_min_events = max(1, args.validation_min_events)
+    args.validation_interval_min = max(0.1, args.validation_interval_min)
     return args
 
 
@@ -704,12 +852,17 @@ def main() -> int:
     if args.min_targets > len(targets):
         print(f"[WARN] min-targets={args.min_targets} > targets={len(targets)}; lowering it")
         args.min_targets = len(targets)
+    if args.active_targets < args.min_targets:
+        args.active_targets = args.min_targets
+
+    current_targets = list(targets)
+    states = {t: TargetState(t) for t in targets}
+    procs: Dict[int, Tuple[str, subprocess.Popen]] = {}
+    selector = selectors.DefaultSelector()
 
     print("[TARGETS]", ", ".join(targets))
-    if args.interface:
-        print(f"[INTERFACE] forcing probes through {args.interface}")
-    else:
-        print("[INTERFACE] using Linux routing/default route")
+    print(f"[INTERFACE] forcing probes through {args.interface}" if args.interface
+          else "[INTERFACE] using Linux routing/default route")
     print("[STATE] LEARNING")
 
     if args.manage_enable:
@@ -719,26 +872,17 @@ def main() -> int:
             print(f"ERROR: cannot disable RedHAT: {e}", file=sys.stderr)
             return 2
 
-    states = {t: TargetState(t) for t in targets}
-    procs: Dict[int, Tuple[str, subprocess.Popen]] = {}
-    selector = selectors.DefaultSelector()
-
-    for target in targets:
-        try:
-            proc = start_ping(
-                target,
-                args.probe_interval_ms / 1000.0,
-                args.interface,
-            )
-        except Exception as e:
-            print(f"[WARN] failed to start ping for {target}: {e}")
-            continue
-        assert proc.stdout is not None
-        selector.register(proc.stdout, selectors.EVENT_READ, target)
-        procs[proc.pid] = (target, proc)
-
+    reset_probe_session(states, targets)
+    start_probe_processes(
+        targets,
+        args.probe_interval_ms / 1000.0,
+        args.interface,
+        selector,
+        procs,
+    )
     if not procs:
         print("ERROR: no ping process started", file=sys.stderr)
+        selector.close()
         return 2
 
     stop = False
@@ -756,61 +900,206 @@ def main() -> int:
     writer.writerow([
         "wall_time", "record", "target", "event_epoch", "gap_ms", "threshold_ms",
         "support", "period_s", "score", "fit_ratio", "p95_residual_ms",
-        "state", "period_ms", "offset_ms",
-        "observed_period_s", "locked_period_s",
-        "predicted_event_epoch", "phase_error_ms", "action"
+        "state", "period_ms", "offset_ms", "observed_period_s", "locked_period_s",
+        "predicted_event_epoch", "phase_error_ms", "action", "probe_mode",
     ])
+
+    def state_label(active: bool) -> str:
+        return "ACTIVE" if active else "LEARNING"
+
+    def log_simple(now_wall: float, record: str, action: str, probe_mode: str,
+                   locked_period: Optional[float] = None) -> None:
+        writer.writerow([
+            now_wall, record, "", "", "", "", "", "", "", "", "",
+            state_label(active), "", "", "",
+            f"{locked_period:.9f}" if locked_period is not None else "",
+            "", "", action, probe_mode,
+        ])
 
     start_wall = time.time()
-
-    # Record the real program start time.  The evaluator should use this row
-    # instead of the first candidate/fit row when computing activation delay.
+    learning_started_wall = start_wall
     writer.writerow([
         start_wall, "start", "", "", "", "", "", "", "", "", "",
-        "LEARNING", "", "", "", "", "", "", "",
+        "LEARNING", "", "", "", "", "", "", "", "LEARNING",
     ])
 
-    next_analysis = time.monotonic() + args.analysis_every
+    # Controller state.
     active = False
+    probe_mode = "LEARNING"  # LEARNING, ACTIVE_CONFIRM, ACTIVE_SLEEP, ACTIVE_VALIDATE
     locked_period: Optional[float] = None
     phase_anchor: Optional[float] = None
     last_valid_event: Optional[float] = None
     last_programmed: Optional[Tuple[int, int]] = None
     last_kernel_resync_time: Optional[float] = None
-
-    phase_error_history: Deque[float] = collections.deque(
-        maxlen=max(1, args.phase_consensus_window)
-    )
-
-    recent_good_period_fits: Deque[float] = collections.deque(
-        maxlen=max(1, args.period_lock_window)
-    )
-    period_mismatch_count = 0
-
-    phase_abs_error_history: Deque[float] = collections.deque(
-        maxlen=max(1, args.prediction_guard_window)
-    )
-
-    last_prediction_guard_ms: Optional[int] = None
-
-    # State-machine timing.
     active_since: Optional[float] = None
     last_disable_time: Optional[float] = None
     last_disabled_period: Optional[float] = None
 
-    # cluster_common_events() is recomputed every analysis interval.
-    # Remember already logged common events so the same event is not written
-    # repeatedly to the CSV.
+    recent_good_period_fits: Deque[float] = collections.deque(
+        maxlen=max(1, args.period_lock_window)
+    )
+    phase_error_history: Deque[float] = collections.deque(
+        maxlen=max(1, args.phase_consensus_window)
+    )
+    phase_abs_error_history: Deque[float] = collections.deque(
+        maxlen=max(1, args.prediction_guard_window)
+    )
+    last_prediction_guard_ms: Optional[int] = None
+    period_mismatch_count = 0
+
+    # Probe-session state for confirmation/periodic validation.
+    session_started_wall: Optional[float] = None
+    session_deadline_mono: Optional[float] = None
+    session_valid_events = 0
+    next_validation_mono: Optional[float] = None
+
     logged_common_events = set()
+    next_analysis = time.monotonic() + args.analysis_every
+
+    def reset_learning_target_stats() -> None:
+        for st in states.values():
+            st.common_support_count = 0
+            st.recent_common_support.clear()
+
+    def enter_learning(now_wall: float, now_mono: float, reason: str) -> None:
+        nonlocal active, probe_mode, locked_period, phase_anchor, last_valid_event
+        nonlocal last_programmed, last_kernel_resync_time, active_since
+        nonlocal last_disable_time, last_disabled_period, period_mismatch_count
+        nonlocal current_targets, session_started_wall, session_deadline_mono
+        nonlocal session_valid_events, next_validation_mono, next_analysis
+        nonlocal last_prediction_guard_ms, learning_started_wall
+
+        previous_period = locked_period
+        if args.manage_enable:
+            disable_redhat(args.dry_run)
+
+        active = False
+        probe_mode = "LEARNING"
+        locked_period = None
+        phase_anchor = None
+        last_valid_event = None
+        last_programmed = None
+        last_kernel_resync_time = None
+        active_since = None
+        period_mismatch_count = 0
+        phase_error_history.clear()
+        phase_abs_error_history.clear()
+        recent_good_period_fits.clear()
+        last_prediction_guard_ms = None
+        current_targets = list(targets)
+        session_started_wall = None
+        session_deadline_mono = None
+        session_valid_events = 0
+        next_validation_mono = None
+        reset_learning_target_stats()
+        learning_started_wall = now_wall
+
+        if previous_period is not None:
+            last_disable_time = now_wall
+            last_disabled_period = previous_period
+
+        # Full LEARNING always restores active probing on all discovery targets.
+        stop_probe_processes(procs, selector)
+        reset_probe_session(states, targets)
+        start_probe_processes(
+            targets,
+            args.probe_interval_ms / 1000.0,
+            args.interface,
+            selector,
+            procs,
+        )
+        next_analysis = now_mono + args.analysis_every
+        print(f"[STATE] LEARNING reason={reason}")
+        print("[TARGETS] restored learning targets: " + ", ".join(current_targets))
+        log_simple(now_wall, "relearn", reason, probe_mode, previous_period)
+
+    def enter_sleep(now_wall: float, now_mono: float, source: str) -> None:
+        nonlocal probe_mode, next_validation_mono, session_started_wall
+        nonlocal session_deadline_mono, session_valid_events
+
+        stop_probe_processes(procs, selector)
+        probe_mode = "ACTIVE_SLEEP"
+        session_started_wall = None
+        session_deadline_mono = None
+        session_valid_events = 0
+        next_validation_mono = now_mono + args.validation_interval_min * 60.0
+        print(
+            f"[PROBE] suspended after {source}; next validation in "
+            f"{args.validation_interval_min:.1f} min"
+        )
+        log_simple(now_wall, "probe_sleep", source, probe_mode, locked_period)
+
+    def start_validation(now_wall: float, now_mono: float) -> None:
+        nonlocal probe_mode, session_started_wall, session_deadline_mono
+        nonlocal session_valid_events, next_analysis
+
+        if locked_period is None:
+            enter_learning(now_wall, now_mono, "validation-without-period")
+            return
+        reset_probe_session(states, current_targets)
+        stop_probe_processes(procs, selector)
+        start_probe_processes(
+            current_targets,
+            args.probe_interval_ms / 1000.0,
+            args.interface,
+            selector,
+            procs,
+        )
+        if len(procs) < args.min_targets:
+            enter_learning(now_wall, now_mono, "validation-probe-start-failure")
+            return
+        probe_mode = "ACTIVE_VALIDATE"
+        session_started_wall = now_wall
+        session_deadline_mono = now_mono + args.validation_cycles * locked_period
+        session_valid_events = 0
+        phase_error_history.clear()
+        phase_abs_error_history.clear()
+        next_analysis = now_mono + min(args.analysis_every, 1.0)
+        print(
+            f"[PROBE] periodic validation started targets={','.join(current_targets)} "
+            f"duration={args.validation_cycles * locked_period:.1f}s"
+        )
+        log_simple(now_wall, "validation_start", "timer", probe_mode, locked_period)
 
     try:
         while not stop:
+            now_mono_pre = time.monotonic()
+            now_wall_pre = time.time()
+
+            # ACTIVE_SLEEP does no continuous probing.  Wake only for scheduled validation.
+            if (
+                active
+                and probe_mode == "ACTIVE_SLEEP"
+                and next_validation_mono is not None
+                and now_mono_pre >= next_validation_mono
+            ):
+                start_validation(now_wall_pre, now_mono_pre)
+
             events_ready = selector.select(timeout=0.25)
             for key, _mask in events_ready:
                 target = key.data
                 line = key.fileobj.readline()
                 if not line:
+                    # A ping process died or its pipe closed.  Unregister it; later
+                    # session checks decide whether enough targets remain.
+                    try:
+                        selector.unregister(key.fileobj)
+                    except Exception:
+                        pass
+                    dead_pid = None
+                    for pid, (t, proc) in procs.items():
+                        if t == target and proc.stdout is key.fileobj:
+                            dead_pid = pid
+                            break
+                    if dead_pid is not None:
+                        _t, proc = procs.pop(dead_pid)
+                        try:
+                            proc.wait(timeout=0.1)
+                        except Exception:
+                            pass
+                    print(f"[WARN] ping process ended for {target}")
                     continue
+
                 m = PING_TS_RE.match(line)
                 if not m:
                     continue
@@ -825,21 +1114,56 @@ def main() -> int:
                 )
                 if candidate:
                     ev, dt, threshold = candidate
-                    print(f"[CANDIDATE] target={target} event={ev:.6f} gap={dt*1000:.1f}ms threshold={threshold*1000:.1f}ms")
+                    print(
+                        f"[CANDIDATE] target={target} event={ev:.6f} "
+                        f"gap={dt*1000:.1f}ms threshold={threshold*1000:.1f}ms"
+                    )
                     writer.writerow([
                         time.time(), "candidate", target, f"{ev:.9f}", f"{dt*1000:.3f}",
-                        f"{threshold*1000:.3f}", "", "", "", "", "", "ACTIVE" if active else "LEARNING", "", "",
-                        "", f"{locked_period:.9f}" if locked_period is not None else "", "", "", ""
+                        f"{threshold*1000:.3f}", "", "", "", "", "",
+                        state_label(active), "", "", "",
+                        f"{locked_period:.9f}" if locked_period is not None else "",
+                        "", "", "", probe_mode,
                     ])
 
             now_mono = time.monotonic()
-            if now_mono < next_analysis:
-                continue
-            next_analysis = now_mono + args.analysis_every
             now_wall = time.time()
+
+            # Sleeping ACTIVE state intentionally skips all stale-fit/disable logic.
+            if active and probe_mode == "ACTIVE_SLEEP":
+                continue
+
+            if now_mono < next_analysis:
+                # Session deadlines must still be enforced even between analyses.
+                if (
+                    active
+                    and probe_mode in ("ACTIVE_CONFIRM", "ACTIVE_VALIDATE")
+                    and session_deadline_mono is not None
+                    and now_mono >= session_deadline_mono
+                ):
+                    needed = (args.active_confirm_min_events
+                              if probe_mode == "ACTIVE_CONFIRM"
+                              else args.validation_min_events)
+                    source = "confirm" if probe_mode == "ACTIVE_CONFIRM" else "validation"
+                    if session_valid_events >= needed:
+                        print(
+                            f"[PROBE] {source} success valid_events={session_valid_events}/{needed}"
+                        )
+                        log_simple(now_wall, f"{source}_success", "pass", probe_mode, locked_period)
+                        enter_sleep(now_wall, now_mono, source)
+                    else:
+                        print(
+                            f"[PROBE] {source} failed valid_events={session_valid_events}/{needed}; "
+                            "returning to full LEARNING"
+                        )
+                        enter_learning(now_wall, now_mono, f"{source}-failed")
+                continue
+
+            next_analysis = now_mono + args.analysis_every
 
             common = cluster_common_events(
                 states,
+                current_targets,
                 now=now_wall,
                 window_s=args.analysis_window,
                 tolerance_s=args.cross_target_ms / 1000.0,
@@ -847,40 +1171,34 @@ def main() -> int:
             )
             common_times = [x[0] for x in common]
 
-            # Log each cross-target common event exactly once.
+            # Log each cross-target common event exactly once.  Participation
+            # statistics are learned only in LEARNING mode.
             for event_time, support, supporters in common:
                 event_key = int(round(event_time * 1000.0))
-
                 if event_key in logged_common_events:
                     continue
-
                 logged_common_events.add(event_key)
                 supporter_text = ",".join(supporters)
 
-                print(
-                    f"[COMMON] event={event_time:.6f} "
-                    f"support={support} targets={supporter_text}"
-                )
+                if not active:
+                    for target in targets:
+                        participated = 1 if target in supporters else 0
+                        states[target].recent_common_support.append(participated)
+                        if participated:
+                            states[target].common_support_count += 1
 
+                print(
+                    f"[COMMON] event={event_time:.6f} support={support} "
+                    f"targets={supporter_text}"
+                )
                 writer.writerow([
-                    now_wall,
-                    "common",
-                    supporter_text,
-                    f"{event_time:.9f}",
-                    "",
-                    "",
-                    support,
-                    "",
-                    "",
-                    "",
-                    "",
-                    "ACTIVE" if active else "LEARNING",
-                    "", "", "",
+                    now_wall, "common", supporter_text, f"{event_time:.9f}", "", "", support,
+                    "", "", "", "", state_label(active), "", "", "",
                     f"{locked_period:.9f}" if locked_period is not None else "",
-                    "", "", "",
+                    "", "", "", probe_mode,
                 ])
 
-            fit = None
+            fit: Optional[PeriodFit] = None
             if len(common_times) >= args.min_events:
                 fit = estimate_period(
                     common_times,
@@ -895,33 +1213,34 @@ def main() -> int:
                 print(
                     f"[FIT] events={len(common_times)} period={fit.period_s:.6f}s "
                     f"score={fit.score:.3f} fit={fit.fit_ratio:.3f} "
-                    f"one-cycle={fit.one_cycle_ratio:.3f} p95-residual={fit.p95_residual_s*1000:.1f}ms"
+                    f"one-cycle={fit.one_cycle_ratio:.3f} "
+                    f"p95-residual={fit.p95_residual_s*1000:.1f}ms"
                 )
                 writer.writerow([
                     now_wall, "fit", "", "", "", "", "",
                     f"{fit.period_s:.9f}", f"{fit.score:.6f}", f"{fit.fit_ratio:.6f}",
-                    f"{fit.p95_residual_s*1000:.3f}", "ACTIVE" if active else "LEARNING", "", "",
+                    f"{fit.p95_residual_s*1000:.3f}", state_label(active), "", "",
                     f"{fit.period_s:.9f}",
                     f"{locked_period:.9f}" if locked_period is not None else "",
-                    "", "", "fit"
+                    "", "", "fit", probe_mode,
                 ])
 
-            # Separate "fit quality" from the one-time minimum learning-time gate.
-            # This matters while ACTIVE: disable decisions should reflect the current
-            # signal quality, not the initial 120 s learning requirement.
-            fit_quality_good = bool(
+            # Initial discovery criteria and ACTIVE maintenance criteria are intentionally separate.
+            learning_fit_good = bool(
+                fit
+                and fit.score >= args.min_score
+                and fit.fit_ratio >= args.min_fit_ratio
+                and fit.p95_residual_s <= args.period_tolerance_ms / 1000.0
+            )
+            active_structure_good = bool(
                 fit
                 and fit.fit_ratio >= args.min_fit_ratio
                 and fit.p95_residual_s <= args.period_tolerance_ms / 1000.0
-                and abs(fit.period_s - locked_period)
-                    <= args.period_relearn_threshold_ms / 1000.0
             )
-
-            if fit_quality_good and fit is not None:
+            if not active and learning_fit_good and fit is not None:
                 recent_good_period_fits.append(fit.period_s)
 
-            learned_long_enough = (now_wall - start_wall) >= args.learn_seconds
-
+            learned_long_enough = (now_wall - learning_started_wall) >= args.learn_seconds
             reactivation_allowed = True
             if (
                 last_disable_time is not None
@@ -932,83 +1251,99 @@ def main() -> int:
                 reactivation_allowed = (now_wall - last_disable_time) >= cooldown_s
 
             enough_lock_fits = len(recent_good_period_fits) >= args.period_lock_min_fits
-            good_fit = (
-                fit_quality_good
+            good_fit = bool(
+                not active
+                and learning_fit_good
                 and learned_long_enough
                 and reactivation_allowed
                 and enough_lock_fits
             )
 
-            if not active and good_fit and fit is not None:
+            if good_fit and fit is not None:
                 tolerance_s = args.period_tolerance_ms / 1000.0
                 candidate_locked_period = statistics.median(list(recent_good_period_fits))
-
-                # First find the best lattice, then explicitly use the NEWEST event
-                # on that lattice as both phase anchor and last_valid_event.  This
-                # prevents activation from inheriting a stale historical event.
                 lattice_anchor = choose_initial_anchor(
-                    common_times,
-                    candidate_locked_period,
-                    tolerance_s,
+                    common_times, candidate_locked_period, tolerance_s
                 )
-
                 anchor = None
                 if lattice_anchor is not None:
                     anchor = newest_phase_consistent_event(
-                        common_times,
-                        lattice_anchor,
-                        candidate_locked_period,
-                        tolerance_s,
+                        common_times, lattice_anchor, candidate_locked_period, tolerance_s
                     )
 
                 if anchor is not None:
                     active = True
+                    probe_mode = "ACTIVE_CONFIRM"
                     locked_period = candidate_locked_period
                     phase_anchor = anchor
                     last_valid_event = anchor
                     active_since = now_wall
                     last_kernel_resync_time = now_wall
                     period_mismatch_count = 0
+                    phase_error_history.clear()
+                    phase_abs_error_history.clear()
 
+                    selected_targets = choose_active_targets(
+                        states,
+                        targets,
+                        args.bootstrap,
+                        args.active_targets,
+                        args.active_min_participation,
+                    )
+                    if len(selected_targets) >= args.min_targets:
+                        current_targets = selected_targets
+                    else:
+                        current_targets = list(targets)
                     print(
-                        f"[STATE] ACTIVE locked_period={locked_period:.6f}s "
-                        f"observed_period={fit.period_s:.6f}s "
-                        f"anchor={phase_anchor:.6f} "
-                        f"monitor_age={now_wall-start_wall:.1f}s"
+                        f"[TARGET-PRUNE] {len(targets)} -> {len(current_targets)} targets: "
+                        + ", ".join(current_targets)
                     )
 
                     if args.manage_enable:
                         last_programmed = program_redhat(
-                            locked_period,
-                            phase_anchor,
-                            args.dry_run,
+                            locked_period, phase_anchor, args.dry_run
                         )
 
+                    session_started_wall = now_wall
+                    session_deadline_mono = now_mono + args.active_confirm_cycles * locked_period
+                    session_valid_events = 0
+                    next_validation_mono = None
+
+                    print(
+                        f"[STATE] ACTIVE locked_period={locked_period:.6f}s "
+                        f"observed_period={fit.period_s:.6f}s anchor={phase_anchor:.6f} "
+                        f"confirm_for={args.active_confirm_cycles:.1f} cycles"
+                    )
                     writer.writerow([
                         now_wall, "activate", "", f"{anchor:.9f}", "", "", "",
                         f"{locked_period:.9f}", f"{fit.score:.6f}", f"{fit.fit_ratio:.6f}",
                         f"{fit.p95_residual_s*1000:.3f}", "ACTIVE",
                         last_programmed[0] if last_programmed else "",
                         last_programmed[1] if last_programmed else "",
-                        f"{fit.period_s:.9f}", f"{locked_period:.9f}", "", "", "lock"
+                        f"{fit.period_s:.9f}", f"{locked_period:.9f}", "", "", "lock",
+                        probe_mode,
                     ])
+                continue
 
-            elif active and locked_period is not None and phase_anchor is not None:
-                # Period is immutable while ACTIVE. fit.period_s is validation only.
-                if fit_quality_good and fit is not None:
+            if active and locked_period is not None and phase_anchor is not None:
+                # Detect a true period change only from structurally good fits.  Do not
+                # gate this test on already being close to the locked period.
+                if active_structure_good and fit is not None:
                     period_error_ms = (fit.period_s - locked_period) * 1000.0
                     if abs(period_error_ms) >= args.period_relearn_threshold_ms:
                         period_mismatch_count += 1
                         print(
-                            f"[PERIOD] locked={locked_period:.6f}s "
-                            f"observed={fit.period_s:.6f}s "
+                            f"[PERIOD] locked={locked_period:.6f}s observed={fit.period_s:.6f}s "
                             f"error={period_error_ms:+.1f}ms "
                             f"mismatch={period_mismatch_count}/{args.period_relearn_count}"
                         )
                     else:
                         period_mismatch_count = 0
 
-                # Only phase-consistent events may validate/resynchronize the lattice.
+                if period_mismatch_count >= args.period_relearn_count:
+                    enter_learning(now_wall, now_mono, "period-mismatch")
+                    continue
+
                 valid = [
                     e for e in common_times
                     if phase_residual(e, phase_anchor, locked_period)
@@ -1023,108 +1358,79 @@ def main() -> int:
                     )
                     phase_error_ms = phase_error_s * 1000.0
                     phase_error_history.append(phase_error_s)
-                    phase_abs_error_history.append(
-                        abs(phase_error_s) * 1000.0
-                    )
+                    phase_abs_error_history.append(abs(phase_error_ms))
                     last_valid_event = newest
+                    session_valid_events += 1
 
                     min_resync_interval_s = args.phase_resync_min_cycles * locked_period
                     cooldown_elapsed = (
                         last_kernel_resync_time is None
                         or now_wall - last_kernel_resync_time >= min_resync_interval_s
                     )
-                    consensus_ready = (
-                        len(phase_error_history)
-                        >= args.phase_consensus_min_events
-                    )
-
+                    consensus_ready = len(phase_error_history) >= args.phase_consensus_min_events
                     consensus_error_s = 0.0
                     sign_ratio = 0.0
                     consensus_crossed = False
 
                     if consensus_ready:
                         recent_errors = list(phase_error_history)
-
                         consensus_error_s = statistics.median(recent_errors)
-
                         if consensus_error_s > 0:
                             same_sign = sum(e > 0 for e in recent_errors)
                         elif consensus_error_s < 0:
                             same_sign = sum(e < 0 for e in recent_errors)
                         else:
                             same_sign = 0
-
                         sign_ratio = same_sign / len(recent_errors)
-
-                        consensus_crossed = (
-                            abs(consensus_error_s) * 1000.0
-                            >= args.phase_resync_threshold_ms
-                            and
-                            sign_ratio >= args.phase_consensus_sign_ratio
+                        consensus_crossed = bool(
+                            abs(consensus_error_s) * 1000.0 >= args.phase_resync_threshold_ms
+                            and sign_ratio >= args.phase_consensus_sign_ratio
                         )
-                    action = "none"
 
+                    action = "none"
                     if consensus_crossed and cooldown_elapsed:
                         alpha = min(1.0, max(0.0, args.phase_resync_alpha))
                         corrected_anchor = phase_anchor + consensus_error_s * alpha
-
                         if args.manage_enable:
                             new_offset = program_redhat_phase_only(
                                 locked_period, corrected_anchor, args.dry_run
                             )
                             if last_programmed is not None:
                                 last_programmed = (last_programmed[0], new_offset)
-
                         phase_anchor = corrected_anchor
                         last_kernel_resync_time = now_wall
-                        action = "resync"
-                        print(
-                            f"[PHASE] event={newest:.6f} predicted={predicted_event:.6f} "
-                            f"error={phase_error_ms:+.1f}ms action=resync "
-                            f"locked_period={locked_period:.6f}s"
-                        )
                         phase_error_history.clear()
-                    else:
-                        reason = "below-threshold" if not consensus_crossed else "resync-cooldown"
-                        print(
-                            f"[PHASE] event={newest:.6f} predicted={predicted_event:.6f} "
-                            f"error={phase_error_ms:+.1f}ms action=none reason={reason} "
-                            f"locked_period={locked_period:.6f}s"
-                        )
-                    if (
-                        args.auto_prediction_guard
-                        and len(phase_abs_error_history) >= 5
-                    ):
+                        action = "resync"
+
+                    print(
+                        f"[PHASE] event={newest:.6f} predicted={predicted_event:.6f} "
+                        f"error={phase_error_ms:+.1f}ms action={action} "
+                        f"session_events={session_valid_events}"
+                    )
+
+                    if args.auto_prediction_guard and len(phase_abs_error_history) >= 5:
                         desired_guard_ms = compute_prediction_guard_ms(
                             list(phase_abs_error_history),
                             args.prediction_guard_safety_ms,
                             args.prediction_guard_min_ms,
                             args.prediction_guard_max_ms,
                         )
-
                         guard_changed_enough = (
                             last_prediction_guard_ms is None
-                            or
-                            abs(
-                                desired_guard_ms
-                                - last_prediction_guard_ms
-                            ) >= args.prediction_guard_update_step_ms
+                            or abs(desired_guard_ms - last_prediction_guard_ms)
+                                >= args.prediction_guard_update_step_ms
                         )
-
                         if guard_changed_enough:
                             print(
-                                f"[GUARD] "
-                                f"p95={percentile(list(phase_abs_error_history), 95):.1f}ms "
+                                f"[GUARD] p95={percentile(list(phase_abs_error_history), 95):.1f}ms "
                                 f"new_guard={desired_guard_ms}ms"
                             )
-
                             if args.manage_enable:
                                 sysctl_write(
                                     "net.ipv4.tcp_leo_dynamic_prediction_guard_ms",
                                     desired_guard_ms,
                                     args.dry_run,
                                 )
-
                             last_prediction_guard_ms = desired_guard_ms
 
                     writer.writerow([
@@ -1137,114 +1443,45 @@ def main() -> int:
                         last_programmed[0] if last_programmed else "",
                         last_programmed[1] if last_programmed else "",
                         f"{fit.period_s:.9f}" if fit else "",
-                        f"{locked_period:.9f}",
-                        f"{predicted_event:.9f}", f"{phase_error_ms:.3f}", action
+                        f"{locked_period:.9f}", f"{predicted_event:.9f}",
+                        f"{phase_error_ms:.3f}", action, probe_mode,
                     ])
 
-                # A sustained fundamental-period change is not a phase problem.
-                if period_mismatch_count >= args.period_relearn_count:
-                    previous_period = locked_period
-                    print(
-                        "[STATE] sustained period mismatch; disabling RedHAT and returning to LEARNING "
-                        f"(locked={locked_period:.6f}s, observed={fit.period_s:.6f}s)"
-                    )
-                    if args.manage_enable:
-                        disable_redhat(args.dry_run)
-                    writer.writerow([
-                        now_wall, "relearn", "", "", "", "", "",
-                        f"{previous_period:.9f}",
-                        f"{fit.score:.6f}" if fit else "",
-                        f"{fit.fit_ratio:.6f}" if fit else "",
-                        f"{fit.p95_residual_s*1000:.3f}" if fit else "",
-                        "LEARNING", "", "",
-                        f"{fit.period_s:.9f}" if fit else "",
-                        f"{previous_period:.9f}", "", "", "period-relearn"
-                    ])
-                    active = False
-                    locked_period = None
-                    phase_anchor = None
-                    last_valid_event = None
-                    active_since = None
-                    last_programmed = None
-                    last_kernel_resync_time = None
-                    period_mismatch_count = 0
-                    recent_good_period_fits.clear()
-                    last_disable_time = now_wall
-                    last_disabled_period = previous_period
+                # Initial confirmation / periodic validation is time-bounded.  On
+                # success the monitor self-suspends; on failure it performs a full relearn.
+                if (
+                    probe_mode in ("ACTIVE_CONFIRM", "ACTIVE_VALIDATE")
+                    and session_deadline_mono is not None
+                    and now_mono >= session_deadline_mono
+                ):
+                    needed = (args.active_confirm_min_events
+                              if probe_mode == "ACTIVE_CONFIRM"
+                              else args.validation_min_events)
+                    source = "confirm" if probe_mode == "ACTIVE_CONFIRM" else "validation"
+                    if session_valid_events >= needed:
+                        print(
+                            f"[PROBE] {source} success valid_events={session_valid_events}/{needed}"
+                        )
+                        log_simple(now_wall, f"{source}_success", "pass", probe_mode, locked_period)
+                        enter_sleep(now_wall, now_mono, source)
+                    else:
+                        print(
+                            f"[PROBE] {source} failed valid_events={session_valid_events}/{needed}; "
+                            "returning to full LEARNING"
+                        )
+                        enter_learning(now_wall, now_mono, f"{source}-failed")
                     continue
 
-                # Hardened disable policy:
-                #
-                # 1) Do not disable simply because a few common events were missed.
-                # 2) Require BOTH:
-                #       a) no recent phase-consistent event for lost_cycles, AND
-                #       b) the current sliding-window period fit is bad.
-                # 3) Also require an ACTIVE grace period so a newly activated
-                #    controller cannot immediately fall back to LEARNING.
-                signature_missing = bool(
-                    last_valid_event is not None
-                    and (now_wall - last_valid_event)
-                    > args.lost_cycles * locked_period
-                )
-
-                fit_bad = not fit_quality_good
-
-                grace_elapsed = bool(
-                    active_since is not None
-                    and (now_wall - active_since)
-                    >= args.disable_grace_cycles * locked_period
-                )
-
-                if signature_missing and fit_bad and grace_elapsed:
-                    previous_period = locked_period
-
-                    print(
-                        "[STATE] LOST periodic signature AND fit is bad; "
-                        "disabling RedHAT and returning to LEARNING "
-                        f"(since_valid={now_wall-last_valid_event:.1f}s, "
-                        f"active_for={now_wall-active_since:.1f}s)"
-                    )
-
-                    if args.manage_enable:
-                        disable_redhat(args.dry_run)
-
-                    writer.writerow([
-                        now_wall, "disable", "", "", "", "", "",
-                        f"{previous_period:.9f}",
-                        f"{fit.score:.6f}" if fit else "",
-                        f"{fit.fit_ratio:.6f}" if fit else "",
-                        f"{fit.p95_residual_s*1000:.3f}" if fit else "",
-                        "LEARNING", "", "",
-                        f"{fit.period_s:.9f}" if fit else "",
-                        f"{previous_period:.9f}", "", "", "lost-signature"
-                    ])
-
-                    active = False
-                    locked_period = None
-                    phase_anchor = None
-                    last_valid_event = None
-                    active_since = None
-                    last_programmed = None
-                    last_kernel_resync_time = None
-                    period_mismatch_count = 0
-                    recent_good_period_fits.clear()
-
-                    # Remember the period that was active so the reactivation
-                    # cooldown has a meaningful duration even after state reset.
-                    last_disable_time = now_wall
-                    last_disabled_period = previous_period
+                # During active probing sessions, if the available target count falls
+                # below cross-target requirements, fail safely into full relearning.
+                running_targets = {target for target, _proc in procs.values()}
+                running_current = sum(1 for target in current_targets if target in running_targets)
+                if running_current < args.min_targets:
+                    enter_learning(now_wall, now_mono, "insufficient-probe-processes")
+                    continue
 
     finally:
-        for _pid, (_target, proc) in procs.items():
-            try:
-                proc.terminate()
-            except OSError:
-                pass
-        for _pid, (_target, proc) in procs.items():
-            try:
-                proc.wait(timeout=1)
-            except subprocess.TimeoutExpired:
-                proc.kill()
+        stop_probe_processes(procs, selector)
         selector.close()
         log_file.close()
 
